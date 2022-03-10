@@ -30,7 +30,7 @@ defmodule Hare.Consumer.Declaration do
 
   defp extract(config, key) do
     with {:ok, extracted_config} <- Keyword.fetch(config, key),
-         true <- Keyword.keyword?(extracted_config) do
+         true <- Keyword.keyword?(extracted_config) || is_list(extracted_config) do
       {:ok, extracted_config}
     else
       :error -> {:error, {:not_present, key}}
@@ -44,19 +44,40 @@ defmodule Hare.Consumer.Declaration do
   end
 
   defp build_steps(exchange_config, queue_config, binds_opts, qos_opts) do
-    resources = [
-      declare_exchange: [{:export_as, :exchange} | exchange_config],
-      declare_queue: [{:export_as, :queue} | queue_config]
-    ]
+    queues_n_binds =
+      cond do
+        Keyword.keyword?(queue_config) ->
+          declare = [declare_queue: [{:export_as, :queue} | queue_config]]
 
-    binds =
-      Enum.map(binds_opts, fn bind_opts ->
-        {:bind, [{:opts, bind_opts} | @bind_exported_resources]}
-      end)
+          binds =
+            Enum.map(binds_opts, fn bind_opts ->
+              {:bind, [{:opts, bind_opts} | @bind_exported_resources]}
+            end)
+
+          declare ++ binds
+
+        is_list(queue_config) ->
+          queue_config
+          |> Enum.flat_map(fn qc ->
+            declare = [{:declare_queue, [{:export_as, :queue} | qc]}]
+
+            binds =
+              Enum.map(binds_opts, fn bind_opts ->
+                {:bind, [{:opts, bind_opts}, exchange_from_export: :exchange, queue: qc[:name]]}
+              end)
+
+            declare ++ binds
+          end)
+      end
+
+    resources =
+      [
+        declare_exchange: [{:export_as, :exchange} | exchange_config]
+      ] ++ queues_n_binds
 
     qos = if qos_opts, do: [qos: qos_opts], else: []
 
-    resources ++ binds ++ qos
+    resources ++ qos
   end
 
   def run(%Declaration{steps: steps, context: context}, chan) do

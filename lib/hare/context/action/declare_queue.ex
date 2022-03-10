@@ -40,6 +40,10 @@ defmodule Hare.Context.Action.DeclareQueue do
   import Hare.Context.Action.Helper.Validations,
     only: [validate: 3, validate: 4, validate_keyword: 3]
 
+  def validate([head | _tail] = list) when is_list(head) do
+    list |> Enum.each(fn cfg -> :ok = validate(cfg) end)
+  end
+
   def validate(config) do
     with :ok <- validate(config, :name, :binary),
          :ok <- validate_keyword(config, :opts, required: false),
