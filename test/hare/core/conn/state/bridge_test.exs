@@ -5,19 +5,21 @@ defmodule Hare.Core.Conn.State.BridgeTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   test "connection lifecycle" do
-    steps = [{:error, :one}, {:error, :two}, {:error, :three}, :ok,
-             {:error, :four}, :ok]
+    steps = [{:error, :one}, {:error, :two}, {:error, :three}, :ok, {:error, :four}, :ok]
 
-    {:ok, history}    = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     {:ok, on_connect} = Adapter.Backdoor.on_connect(steps)
     adapter_config = [history: history, on_connect: on_connect]
 
-    bridge = Bridge.new(adapter: Adapter,
-                        backoff: [100, 1000],
-                        config:  adapter_config)
+    bridge =
+      Bridge.new(
+        adapter: Adapter,
+        backoff: [100, 1000],
+        config: adapter_config
+      )
 
-    assert {:retry, 100,  :one,   bridge} = Bridge.connect(bridge)
-    assert {:retry, 1000, :two,   bridge} = Bridge.connect(bridge)
+    assert {:retry, 100, :one, bridge} = Bridge.connect(bridge)
+    assert {:retry, 1000, :two, bridge} = Bridge.connect(bridge)
     assert {:retry, 1000, :three, bridge} = Bridge.connect(bridge)
     assert %{status: :reconnecting} = bridge
 
@@ -40,12 +42,14 @@ defmodule Hare.Core.Conn.State.BridgeTest do
 
     assert %{status: :not_connected} = Bridge.disconnect(bridge)
 
-    expected_events = [{:open_connection,    [adapter_config], {:ok, given_1}},
-                       {:monitor_connection, [given_1],         ref_1},
-                       {:open_channel,       [given_1],         {:ok, given_chan}},
-                       {:open_connection,    [adapter_config], {:ok, given_2}},
-                       {:monitor_connection, [given_2],         ref_2},
-                       {:close_connection,   [given_2],         :ok}]
+    expected_events = [
+      {:open_connection, [adapter_config], {:ok, given_1}},
+      {:monitor_connection, [given_1], ref_1},
+      {:open_channel, [given_1], {:ok, given_chan}},
+      {:open_connection, [adapter_config], {:ok, given_2}},
+      {:monitor_connection, [given_2], ref_2},
+      {:close_connection, [given_2], :ok}
+    ]
 
     assert expected_events == Adapter.Backdoor.events(history)
   end

@@ -19,25 +19,26 @@ defmodule Hare.Core.Conn.State do
   alias __MODULE__.{Bridge, Waiting}
   alias Hare.Core.Chan
 
-  @type reply :: (Waiting.client, Hare.Adapter.chan -> any)
+  @type reply :: (Waiting.client(), Hare.Adapter.chan() -> any)
 
   @type t :: %__MODULE__{
-              bridge:  Bridge.t,
-              waiting: Waiting.t,
-              reply:   reply}
+          bridge: Bridge.t(),
+          waiting: Waiting.t(),
+          reply: reply
+        }
 
   defstruct [:bridge, :waiting, :reply]
 
-  @type interval :: Bridge.interval
-  @type client   :: Waiting.client
+  @type interval :: Bridge.interval()
+  @type client :: Waiting.client()
 
   @doc """
   Creates a new `Conn.State` struct.
   """
-  @spec new(Bridge.config, reply) :: t
+  @spec new(Bridge.config(), reply) :: t
   def new(config, reply) do
-    bridge  = Bridge.new(config)
-    waiting = Waiting.new
+    bridge = Bridge.new(config)
+    waiting = Waiting.new()
 
     %State{bridge: bridge, waiting: waiting, reply: reply}
   end
@@ -49,8 +50,9 @@ defmodule Hare.Core.Conn.State do
   On failure returns `{:retry, interval, state}` expecting the
   caller to wait for that interval before calling connect/1 again.
   """
-  @spec connect(t) :: {:ok, t} |
-                      {:retry, interval, t}
+  @spec connect(t) ::
+          {:ok, t}
+          | {:retry, interval, t}
   def connect(%State{bridge: bridge} = state),
     do: Bridge.connect(bridge) |> handle_connect(state)
 
@@ -79,7 +81,7 @@ defmodule Hare.Core.Conn.State do
   @doc """
   Returns the Bridge conn.
   """
-  @spec given_conn(t) :: Hare.Adapter.conn
+  @spec given_conn(t) :: Hare.Adapter.conn()
   def given_conn(%State{bridge: bridge}),
     do: Bridge.given_conn(bridge)
 
@@ -96,6 +98,7 @@ defmodule Hare.Core.Conn.State do
 
     {:ok, reply_waiting(clients, new_state)}
   end
+
   defp handle_connect({:retry, interval, _reason, new_bridge}, state) do
     {:retry, interval, %{state | bridge: new_bridge}}
   end
@@ -104,10 +107,12 @@ defmodule Hare.Core.Conn.State do
     reply.(client, {:ok, Chan.new(given_chan, bridge.adapter)})
     state
   end
+
   defp handle_open_channel(reason, %{waiting: waiting} = state, client)
        when reason in [:not_connected, :closing, :blocked] do
     %{state | waiting: Waiting.push(waiting, client)}
   end
+
   defp handle_open_channel({:error, _reason} = error, %{reply: reply} = state, client) do
     reply.(client, error)
     state

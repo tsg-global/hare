@@ -6,9 +6,7 @@ defmodule Hare.Context.Action.DeclareExchangeTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   test "validate/1" do
-    config = [name: "foo",
-              type: :fanout,
-              opts: [durable: true]]
+    config = [name: "foo", type: :fanout, opts: [durable: true]]
 
     assert :ok == DeclareExchange.validate(config)
   end
@@ -18,14 +16,14 @@ defmodule Hare.Context.Action.DeclareExchangeTest do
     assert error == DeclareExchange.validate([])
 
     error = {:error, {:not_binary, :name, :foo}}
-    assert error == DeclareExchange.validate([name: :foo])
+    assert error == DeclareExchange.validate(name: :foo)
 
     error = {:error, {:not_atom, :type, "fanout"}}
-    assert error == DeclareExchange.validate([name: "foo", type: "fanout"])
+    assert error == DeclareExchange.validate(name: "foo", type: "fanout")
   end
 
   test "run/2" do
-    {:ok, history} = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     config = [history: history]
 
     {:ok, given_conn} = Adapter.open_connection(config)

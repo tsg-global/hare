@@ -42,18 +42,18 @@ defmodule Hare.Context do
   alias Hare.Core.Chan
   alias __MODULE__.{Result, Action}
 
-  @type steps :: Keyword.t
+  @type steps :: Keyword.t()
 
   @doc """
   Validates the format of a set of steps.
   """
   @spec validate(steps) ::
-          :ok |
-          {:error, :not_a_keyword_list} |
-          {:error, {:invalid_step, step :: atom, term}}
+          :ok
+          | {:error, :not_a_keyword_list}
+          | {:error, {:invalid_step, step :: atom, term}}
   def validate(steps) do
     case Keyword.keyword?(steps) do
-      true  -> validate_each(steps)
+      true -> validate_each(steps)
       false -> {:error, :not_a_keyword_list}
     end
   end
@@ -61,9 +61,10 @@ defmodule Hare.Context do
   defp validate_each([]) do
     :ok
   end
+
   defp validate_each([{name, config} | rest]) do
     case Action.validate(name, config) do
-      :ok              -> validate_each(rest)
+      :ok -> validate_each(rest)
       {:error, reason} -> {:error, {:invalid_step, name, reason}}
     end
   end
@@ -84,31 +85,33 @@ defmodule Hare.Context do
     * `{:ok, result}` - All steps validated and ran successfully
     * `{:error, result}` - A step failed to run
   """
-  @spec run(Chan.t, steps, opts :: Keyword.t) ::
-          {:invalid, term} |
-          {:ok, Result.t} |
-          {:error, Result.t}
+  @spec run(Chan.t(), steps, opts :: Keyword.t()) ::
+          {:invalid, term}
+          | {:ok, Result.t()}
+          | {:error, Result.t()}
   def run(%Chan{} = chan, steps, opts \\ []) do
     case Keyword.get(opts, :validate, true) do
-      true  -> validate_and_run_each(chan, steps)
+      true -> validate_and_run_each(chan, steps)
       false -> run_each(chan, steps)
     end
   end
 
   defp validate_and_run_each(chan, steps) do
     case validate(steps) do
-      :ok              -> run_each(chan, steps)
+      :ok -> run_each(chan, steps)
       {:error, reason} -> {:invalid, reason}
     end
   end
 
-  defp run_each(chan, steps, result \\ Result.new)
+  defp run_each(chan, steps, result \\ Result.new())
+
   defp run_each(_chan, [], result) do
     {:ok, result}
   end
+
   defp run_each(chan, [step | rest], result) do
     case perform(chan, step, result) do
-      {:ok,    new_result} -> run_each(chan, rest, new_result)
+      {:ok, new_result} -> run_each(chan, rest, new_result)
       {:error, new_result} -> set_not_done(rest, new_result)
     end
   end
@@ -116,11 +119,14 @@ defmodule Hare.Context do
   defp perform(chan, {name, config}, %{exports: exports} = result) do
     case Action.run(chan, name, config, exports) do
       :ok ->
-        {:ok, Result.success(result, name, config, nil,  exports)}
+        {:ok, Result.success(result, name, config, nil, exports)}
+
       {:ok, info} ->
         {:ok, Result.success(result, name, config, info, exports)}
+
       {:ok, info, new_exports} ->
         {:ok, Result.success(result, name, config, info, new_exports)}
+
       {:error, reason} ->
         {:error, Result.failure(result, name, config, reason)}
     end
@@ -128,6 +134,7 @@ defmodule Hare.Context do
 
   defp set_not_done([], result),
     do: {:error, result}
+
   defp set_not_done([{name, config} | rest], result),
     do: set_not_done(rest, Result.not_done(result, name, config))
 end

@@ -3,19 +3,29 @@ defmodule Hare.RPC.Client.State do
 
   alias __MODULE__
 
-  defstruct [:config,
-             :declaration, :runtime_opts, :chan, :resp_queue, :req_exchange,
-             :mod, :given,
-             :connected, :waiting]
+  defstruct [
+    :config,
+    :declaration,
+    :runtime_opts,
+    :chan,
+    :resp_queue,
+    :req_exchange,
+    :mod,
+    :given,
+    :connected,
+    :waiting
+  ]
 
   def new(config, declaration, runtime_opts, mod, given) do
-    %State{config:       config,
-           declaration:  declaration,
-           runtime_opts: runtime_opts,
-           mod:          mod,
-           given:        given,
-           connected:    false,
-           waiting:      %{}}
+    %State{
+      config: config,
+      declaration: declaration,
+      runtime_opts: runtime_opts,
+      mod: mod,
+      given: given,
+      connected: false,
+      waiting: %{}
+    }
   end
 
   def connected(%State{} = state, chan, resp_queue, req_exchange) do
@@ -38,7 +48,7 @@ defmodule Hare.RPC.Client.State do
 
   def pop_waiting(%State{waiting: waiting} = state, correlation_id) do
     case Map.pop(waiting, correlation_id) do
-      {nil, _}            -> :unknown
+      {nil, _} -> :unknown
       {from, new_waiting} -> {:ok, from, %{state | waiting: new_waiting}}
     end
   end

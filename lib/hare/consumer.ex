@@ -62,10 +62,10 @@ defmodule Hare.Consumer do
     * `:bind` - (defaults to `[]`) binding options
   """
 
-  @type payload :: Hare.Adapter.payload
-  @type meta    :: map
-  @type state   :: term
-  @type action  :: :ack | :nack | :reject
+  @type payload :: Hare.Adapter.payload()
+  @type meta :: map
+  @type state :: term
+  @type action :: :ack | :nack | :reject
 
   @doc """
   Called when the consumer process is first started. `start_link/5` will block
@@ -87,9 +87,9 @@ defmodule Hare.Consumer do
   or calling `terminate/2`.
   """
   @callback init(initial :: term) ::
-              {:ok, state} |
-              :ignore |
-              {:stop, reason :: term}
+              {:ok, state}
+              | :ignore
+              | {:stop, reason :: term}
 
   @doc """
   Called when the consumer process has opened AMQP channel before registering
@@ -102,8 +102,8 @@ defmodule Hare.Consumer do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_connected(state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the AMQP server has registered the process as a consumer and it
@@ -116,8 +116,8 @@ defmodule Hare.Consumer do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_ready(meta, state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the AMQP consumer has been disconnected from the AMQP broker.
@@ -130,8 +130,8 @@ defmodule Hare.Consumer do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_disconnected(reason :: term, state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when a message is delivered from the queue.
@@ -155,23 +155,23 @@ defmodule Hare.Consumer do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_message(payload, meta, state) ::
-              {:reply, action, state} |
-              {:reply, action, opts :: Keyword.t, state} |
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:reply, action, state}
+              | {:reply, action, opts :: Keyword.t(), state}
+              | {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the process receives a call message sent by `call/3`. This
   callback has the same arguments as the `GenServer` equivalent and the
   `:reply`, `:noreply` and `:stop` return tuples behave the same.
   """
-  @callback handle_call(request :: term, GenServer.from, state) ::
-              {:reply, reply :: term, state} |
-              {:reply, reply :: term, state, timeout | :hibernate} |
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state} |
-              {:stop, reason :: term, reply :: term, state}
+  @callback handle_call(request :: term, GenServer.from(), state) ::
+              {:reply, reply :: term, state}
+              | {:reply, reply :: term, state, timeout | :hibernate}
+              | {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
+              | {:stop, reason :: term, reply :: term, state}
 
   @doc """
   Called when the process receives a cast message sent by `cast/3`. This
@@ -179,9 +179,9 @@ defmodule Hare.Consumer do
   `:noreply` and `:stop` return tuples behave the same.
   """
   @callback handle_cast(request :: term, state) ::
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the process receives a message.
@@ -194,9 +194,8 @@ defmodule Hare.Consumer do
   reason `reason`.
   """
   @callback handle_info(meta, state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
-
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   This callback is the same as the `GenServer` equivalent and is called when the
@@ -246,10 +245,15 @@ defmodule Hare.Consumer do
       def terminate(_reason, _state),
         do: :ok
 
-      defoverridable [init: 1, terminate: 2,
-                      handle_connected: 1, handle_ready: 2, handle_disconnected: 2,
-                      handle_message: 3,
-                      handle_call: 3, handle_cast: 2, handle_info: 2]
+      defoverridable init: 1,
+                     terminate: 2,
+                     handle_connected: 1,
+                     handle_ready: 2,
+                     handle_disconnected: 2,
+                     handle_message: 3,
+                     handle_call: 3,
+                     handle_cast: 2,
+                     handle_info: 2
     end
   end
 
@@ -260,12 +264,14 @@ defmodule Hare.Consumer do
 
   @context Hare.Context
 
-  @type config :: [queue:    Hare.Context.Action.DeclareQueue.config,
-                   exchange: Hare.Context.Action.DeclareExchange.config,
-                   bind:     Keyword.t,
-                   qos:      Keyword.t]
+  @type config :: [
+          queue: Hare.Context.Action.DeclareQueue.config(),
+          exchange: Hare.Context.Action.DeclareExchange.config(),
+          bind: Keyword.t(),
+          qos: Keyword.t()
+        ]
 
-  @type opts :: Hare.Adapter.opts
+  @type opts :: Hare.Adapter.opts()
 
   @doc """
   Starts a `Hare.Consumer` process linked to the current process.
@@ -282,7 +288,8 @@ defmodule Hare.Consumer do
     * `initial` - the value that will be given to `init/1`
     * `opts` - the GenServer options
   """
-  @spec start_link(module, GenServer.server, config, initial :: term, GenServer.options) :: GenServer.on_start
+  @spec start_link(module, GenServer.server(), config, initial :: term, GenServer.options()) ::
+          GenServer.on_start()
   def start_link(mod, conn, config, initial, opts \\ []) do
     {context, opts} = Keyword.pop(opts, :context, @context)
     args = {config, context, mod, initial}
@@ -315,15 +322,15 @@ defmodule Hare.Consumer do
   def recover(%{queue: queue} = _meta, opts \\ []),
     do: Queue.recover(queue, opts)
 
-  defdelegate call(server, message),          to: Hare.Actor
+  defdelegate call(server, message), to: Hare.Actor
   defdelegate call(server, message, timeout), to: Hare.Actor
-  defdelegate cast(server, message),          to: Hare.Actor
-  defdelegate reply(from, message),           to: Hare.Actor
+  defdelegate cast(server, message), to: Hare.Actor
+  defdelegate reply(from, message), to: Hare.Actor
 
   @doc false
   def init({config, context, mod, initial}) do
     with {:ok, declaration} <- build_declaration(config, context),
-         {:ok, given}       <- mod_init(mod, initial) do
+         {:ok, given} <- mod_init(mod, initial) do
       {:ok, State.new(config, declaration, mod, given)}
     end
   end
@@ -336,18 +343,18 @@ defmodule Hare.Consumer do
 
   defp mod_init(mod, initial) do
     case mod.init(initial) do
-      {:ok, given}    -> {:ok, given}
-      :ignore         -> :ignore
+      {:ok, given} -> {:ok, given}
+      :ignore -> :ignore
       {:stop, reason} -> {:stop, reason}
     end
   end
 
   @doc false
   def connected(chan, %{mod: mod, given: given, declaration: declaration} = state) do
-    with {:noreply, new_given}  <- mod.handle_connected(given),
-         new_state              <- State.set(state, new_given),
+    with {:noreply, new_given} <- mod.handle_connected(given),
+         new_state <- State.set(state, new_given),
          {:ok, queue, exchange} <- Declaration.run(declaration, chan),
-         {:ok, new_queue}       <- Queue.consume(queue) do
+         {:ok, new_queue} <- Queue.consume(queue) do
       {:ok, State.connected(new_state, new_queue, exchange)}
     else
       {:stop, reason, new_given} -> {:stop, reason, State.set(state, new_given)}

@@ -105,10 +105,11 @@ defmodule Hare.Adapter.Sandbox do
   # Get
   #
   def get(chan, queue, opts) do
-    result = case Chan.get_message(chan) do
-      :empty  -> {:empty, %{}}
-      payload -> {:ok, payload, :meta}
-    end
+    result =
+      case Chan.get_message(chan) do
+        :empty -> {:empty, %{}}
+        payload -> {:ok, payload, :meta}
+      end
 
     register(chan, {:get, [chan, queue, opts], result})
   end
@@ -136,14 +137,19 @@ defmodule Hare.Adapter.Sandbox do
 
   def handle({:consume_ok, _meta} = message),
     do: message
+
   def handle({:deliver, _payload, _meta} = message),
     do: message
+
   def handle({:cancel_ok, _meta} = message),
     do: message
+
   def handle({:cancel, _meta} = message),
     do: message
+
   def handle({:return, _payload, _meta} = message),
     do: message
+
   def handle(_message),
     do: :unknown
 
@@ -164,6 +170,7 @@ defmodule Hare.Adapter.Sandbox do
   #
   defp register(%Conn{} = conn, event),
     do: Conn.register(conn, event)
+
   defp register(%Chan{} = conn, event),
     do: Chan.register(conn, event)
 end

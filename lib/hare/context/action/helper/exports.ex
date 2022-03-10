@@ -7,7 +7,7 @@ defmodule Hare.Context.Action.Helper.Exports do
   def get(exports, export) do
     case Map.fetch(exports, export) do
       {:ok, export} -> {:ok, export}
-      :error        -> {:error, {:export_missing, export, exports}}
+      :error -> {:error, {:export_missing, export, exports}}
     end
   end
 
@@ -25,9 +25,10 @@ defmodule Hare.Context.Action.Helper.Exports do
   def get_name_or_export(config, exports, name_field, export_field) do
     case Keyword.fetch(config, name_field) do
       {:ok, name} -> {:name, name}
-      :error      -> try_export(config, exports, export_field)
+      :error -> try_export(config, exports, export_field)
     end
   end
+
   defp try_export(config, exports, field) do
     with {:ok, export} <- get_through(config, exports, field) do
       {:export, export}

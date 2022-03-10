@@ -26,7 +26,7 @@ defmodule Hare.Context.Action do
   @type t :: module | atom
 
   @typedoc "The configuration of an action"
-  @type config :: Keyword.t
+  @type config :: Keyword.t()
 
   @doc """
   Validates the given config format.
@@ -35,8 +35,8 @@ defmodule Hare.Context.Action do
   it is invalid.
   """
   @callback validate(config) ::
-              :ok |
-              {:error, reason :: term}
+              :ok
+              | {:error, reason :: term}
 
   @typedoc "Information about the execution of an action"
   @type info :: term
@@ -57,26 +57,28 @@ defmodule Hare.Context.Action do
     * `{:ok, info, exports}` - On success, providing some info, with a modified exports map
     * `{:error, reason}` - On error
   """
-  @callback run(chan :: Hare.Core.Chan.t, config, exports) ::
-              :ok |
-              {:ok, info} |
-              {:ok, info, exports} |
-              {:error, reason :: term}
+  @callback run(chan :: Hare.Core.Chan.t(), config, exports) ::
+              :ok
+              | {:ok, info}
+              | {:ok, info, exports}
+              | {:error, reason :: term}
 
   alias __MODULE__
 
-  @known %{exchange:                   Action.DeclareExchange,
-           declare_exchange:           Action.DeclareExchange,
-           default_exchange:           Action.DefaultExchange,
-           delete_exchange:            Action.DeleteExchange,
-           queue:                      Action.DeclareQueue,
-           declare_queue:              Action.DeclareQueue,
-           delete_queue:               Action.DeleteQueue,
-           declare_server_named_queue: Action.DeclareServerNamedQueue,
-           server_named_queue:         Action.DeclareServerNamedQueue,
-           bind:                       Action.Bind,
-           unbind:                     Action.Unbind,
-           qos:                        Action.Qos}
+  @known %{
+    exchange: Action.DeclareExchange,
+    declare_exchange: Action.DeclareExchange,
+    default_exchange: Action.DefaultExchange,
+    delete_exchange: Action.DeleteExchange,
+    queue: Action.DeclareQueue,
+    declare_queue: Action.DeclareQueue,
+    delete_queue: Action.DeleteQueue,
+    declare_server_named_queue: Action.DeclareServerNamedQueue,
+    server_named_queue: Action.DeclareServerNamedQueue,
+    bind: Action.Bind,
+    unbind: Action.Unbind,
+    qos: Action.Qos
+  }
 
   @doc false
   def validate(name_or_module, config, known \\ @known) do
@@ -93,7 +95,7 @@ defmodule Hare.Context.Action do
   defp ensure_module(name_or_module, known) do
     case Map.fetch(known, name_or_module) do
       {:ok, module} -> module
-      :error        -> name_or_module
+      :error -> name_or_module
     end
   end
 end

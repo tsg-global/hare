@@ -1,5 +1,4 @@
 if Code.ensure_loaded?(AMQP) do
-
   defmodule Hare.Adapter.AMQP do
     @moduledoc """
     Implementation of the `Hare.Adapter` behaviour for the AMQP library.
@@ -9,11 +8,7 @@ if Code.ensure_loaded?(AMQP) do
 
     @behaviour Hare.Adapter
 
-    alias AMQP.{Connection,
-                Channel,
-                Exchange,
-                Queue,
-                Basic}
+    alias AMQP.{Connection, Channel, Exchange, Queue, Basic}
 
     # Connection
     #
@@ -123,14 +118,19 @@ if Code.ensure_loaded?(AMQP) do
 
     def handle({:basic_consume_ok, meta}),
       do: {:consume_ok, meta}
+
     def handle({:basic_deliver, payload, meta}),
       do: {:deliver, payload, meta}
+
     def handle({:basic_cancel_ok, meta}),
       do: {:cancel_ok, meta}
+
     def handle({:basic_cancel, meta}),
       do: {:cancel, meta}
+
     def handle({:basic_return, payload, meta}),
       do: {:return, payload, meta}
+
     def handle(_message),
       do: :unknown
 
@@ -149,5 +149,4 @@ if Code.ensure_loaded?(AMQP) do
     def reject(%Channel{} = chan, %{delivery_tag: tag}, opts),
       do: Basic.reject(chan, tag, opts)
   end
-
 end

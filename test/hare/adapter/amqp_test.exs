@@ -5,12 +5,16 @@ defmodule Hare.Adapter.AMQPTest do
   alias Hare.Adapter.AMQP, as: Adapter
   @config Application.get_env(:hare, :conn_config)
 
-  @exchange %{name: "__test__.hare_adapter_amqp_test_exchange",
-              type: :direct,
-              opts: [durable: false, auto_delete: true]}
+  @exchange %{
+    name: "__test__.hare_adapter_amqp_test_exchange",
+    type: :direct,
+    opts: [durable: false, auto_delete: true]
+  }
 
-  @queue %{name: "__test__.hare_adapter_amqp_test_queue",
-           opts: [durable: false, auto_delete: true]}
+  @queue %{
+    name: "__test__.hare_adapter_amqp_test_queue",
+    opts: [durable: false, auto_delete: true]
+  }
 
   @routing_key "valid"
 

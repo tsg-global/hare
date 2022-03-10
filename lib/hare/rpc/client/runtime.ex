@@ -17,10 +17,13 @@ defmodule Hare.RPC.Client.Runtime do
     case Keyword.fetch(config, :timeout) do
       {:ok, timeout} when is_integer(timeout) and timeout > 0 ->
         {:ok, timeout}
+
       {:ok, :infinity} ->
         {:ok, :infinity}
+
       {:ok, timeout} ->
         {:error, {:not_integer_or_infinity_timeout, timeout}}
+
       :error ->
         {:ok, @default_timeout}
     end

@@ -55,12 +55,12 @@ defmodule Hare.Publisher do
   default exchange will be used.
   """
 
-  @type message     :: term
-  @type payload     :: Hare.Adapter.payload
-  @type routing_key :: Hare.Adapter.routing_key
-  @type opts        :: Hare.Adapter.opts
-  @type meta        :: map
-  @type state       :: term
+  @type message :: term
+  @type payload :: Hare.Adapter.payload()
+  @type routing_key :: Hare.Adapter.routing_key()
+  @type opts :: Hare.Adapter.opts()
+  @type meta :: map
+  @type state :: term
 
   @doc """
   Called when the publisher process is first started. `start_link/5` will block
@@ -81,9 +81,9 @@ defmodule Hare.Publisher do
   or calling `terminate/2`.
   """
   @callback init(initial :: term) ::
-              {:ok, state} |
-              :ignore |
-              {:stop, reason :: term}
+              {:ok, state}
+              | :ignore
+              | {:stop, reason :: term}
 
   @doc """
   Called when the publisher process has successfully opened AMQP channel.
@@ -95,8 +95,8 @@ defmodule Hare.Publisher do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_connected(state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the AMQP publisher has been disconnected from the AMQP broker.
@@ -109,8 +109,8 @@ defmodule Hare.Publisher do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_disconnected(reason :: term, state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called before a message will be published to the exchange.
@@ -133,10 +133,10 @@ defmodule Hare.Publisher do
   reason `reason`.
   """
   @callback before_publication(message, routing_key, opts :: term, state) ::
-              {:ok, state} |
-              {:ok, payload, routing_key, opts :: term, state} |
-              {:ignore, state} |
-              {:stop, reason :: term, state}
+              {:ok, state}
+              | {:ok, payload, routing_key, opts :: term, state}
+              | {:ignore, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called after a message has been published to the exchange.
@@ -151,21 +151,21 @@ defmodule Hare.Publisher do
   reason `reason`.
   """
   @callback after_publication(payload, routing_key, opts :: term, state) ::
-              {:ok, state} |
-              {:stop, reason :: term, state}
+              {:ok, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the process receives a call message sent by `call/3`. This
   callback has the same arguments as the `GenServer` equivalent and the
   `:reply`, `:noreply` and `:stop` return tuples behave the same.
   """
-  @callback handle_call(request :: term, GenServer.from, state) ::
-              {:reply, reply :: term, state} |
-              {:reply, reply :: term, state, timeout | :hibernate} |
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state} |
-              {:stop, reason :: term, reply :: term, state}
+  @callback handle_call(request :: term, GenServer.from(), state) ::
+              {:reply, reply :: term, state}
+              | {:reply, reply :: term, state, timeout | :hibernate}
+              | {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
+              | {:stop, reason :: term, reply :: term, state}
 
   @doc """
   Called when the process receives a cast message sent by `cast/3`. This
@@ -173,9 +173,9 @@ defmodule Hare.Publisher do
   `:noreply` and `:stop` return tuples behave the same.
   """
   @callback handle_cast(request :: term, state) ::
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the process receives a message.
@@ -188,8 +188,8 @@ defmodule Hare.Publisher do
   reason `reason`.
   """
   @callback handle_info(message, state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   This callback is the same as the `GenServer` equivalent and is called when the
@@ -239,10 +239,15 @@ defmodule Hare.Publisher do
       def terminate(_reason, _state),
         do: :ok
 
-      defoverridable [init: 1, terminate: 2,
-                      handle_connected: 1, handle_disconnected: 2,
-                      before_publication: 4, after_publication: 4,
-                      handle_call: 3, handle_cast: 2, handle_info: 2]
+      defoverridable init: 1,
+                     terminate: 2,
+                     handle_connected: 1,
+                     handle_disconnected: 2,
+                     before_publication: 4,
+                     after_publication: 4,
+                     handle_call: 3,
+                     handle_cast: 2,
+                     handle_info: 2
     end
   end
 
@@ -253,8 +258,8 @@ defmodule Hare.Publisher do
 
   @context Hare.Context
 
-  @type config        :: [config_option]
-  @type config_option :: {:exchange, Hare.Context.Action.DeclareExchange.config}
+  @type config :: [config_option]
+  @type config_option :: {:exchange, Hare.Context.Action.DeclareExchange.config()}
 
   @doc """
   Starts a `Hare.Publisher` process linked to the current process.
@@ -271,7 +276,8 @@ defmodule Hare.Publisher do
     * `initial` - the value that will be given to `init/1`
     * `opts` - the GenServer options
   """
-  @spec start_link(module, GenServer.server, config, initial :: term, GenServer.options) :: GenServer.on_start
+  @spec start_link(module, GenServer.server(), config, initial :: term, GenServer.options()) ::
+          GenServer.on_start()
   def start_link(mod, conn, config, initial, opts \\ []) do
     {context, opts} = Keyword.pop(opts, :context, @context)
     args = {config, context, mod, initial}
@@ -279,22 +285,22 @@ defmodule Hare.Publisher do
     Hare.Actor.start_link(__MODULE__, conn, args, opts)
   end
 
-  defdelegate call(server, message),          to: Hare.Actor
+  defdelegate call(server, message), to: Hare.Actor
   defdelegate call(server, message, timeout), to: Hare.Actor
-  defdelegate cast(server, message),          to: Hare.Actor
-  defdelegate reply(from, message),           to: Hare.Actor
+  defdelegate cast(server, message), to: Hare.Actor
+  defdelegate reply(from, message), to: Hare.Actor
 
   @doc """
   Publishes a message to an exchange through the `Hare.Publisher` process.
   """
-  @spec publish(GenServer.server, payload :: term, routing_key, opts) :: :ok
+  @spec publish(GenServer.server(), payload :: term, routing_key, opts) :: :ok
   def publish(client, payload, routing_key \\ "", opts \\ []),
     do: Hare.Actor.cast(client, {:"$hare_publication", payload, routing_key, opts})
 
   @doc false
   def init({config, context, mod, initial}) do
     with {:ok, declaration} <- build_declaration(config, context),
-         {:ok, given}       <- mod_init(mod, initial) do
+         {:ok, given} <- mod_init(mod, initial) do
       {:ok, State.new(config, declaration, mod, given)}
     end
   end
@@ -307,8 +313,8 @@ defmodule Hare.Publisher do
 
   defp mod_init(mod, initial) do
     case mod.init(initial) do
-      {:ok, given}    -> {:ok, given}
-      :ignore         -> :ignore
+      {:ok, given} -> {:ok, given}
+      :ignore -> :ignore
       {:stop, reason} -> {:stop, reason}
     end
   end
@@ -316,8 +322,8 @@ defmodule Hare.Publisher do
   @doc false
   def connected(chan, %{mod: mod, given: given, declaration: declaration} = state) do
     with {:noreply, new_given} <- mod.handle_connected(given),
-         new_state             <- State.set(state, new_given),
-         {:ok, exchange}       <- Declaration.run(declaration, chan) do
+         new_state <- State.set(state, new_given),
+         {:ok, exchange} <- Declaration.run(declaration, chan) do
       {:ok, State.connected(new_state, exchange)}
     else
       {:stop, reason, new_given} -> {:stop, reason, State.set(state, new_given)}
@@ -377,6 +383,7 @@ defmodule Hare.Publisher do
         {:stop, reason, State.set(state, new_given)}
     end
   end
+
   def handle_cast(message, state),
     do: handle_async(message, :handle_cast, state)
 
@@ -391,6 +398,7 @@ defmodule Hare.Publisher do
   defp perform(_payload, _key, _opts, given, %{connected: false} = state) do
     {:noreply, State.set(state, given)}
   end
+
   defp perform(payload, key, opts, given, %{mod: mod, exchange: exchange} = state) do
     Exchange.publish(exchange, payload, key, opts)
 

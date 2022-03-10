@@ -22,27 +22,29 @@ defmodule Hare.Context.Result do
 
   alias __MODULE__
 
-  @type step_mod :: Hare.Context.Action.t
-  @type config   :: Hare.Context.Action.config
-  @type info     :: Hare.Context.Action.info
-  @type exports  :: Hare.Context.Action.exports
+  @type step_mod :: Hare.Context.Action.t()
+  @type config :: Hare.Context.Action.config()
+  @type info :: Hare.Context.Action.info()
+  @type exports :: Hare.Context.Action.exports()
 
   @typedoc """
   The possible formats of a step depending on whether it succeeded, failed or
   was not run.
   """
-  @type step_result :: %{status: :success, config: config, info: info} |
-                       %{status: :failure, config: config, reason: reason :: term} |
-                       %{status: :not_done, config: config}
+  @type step_result ::
+          %{status: :success, config: config, info: info}
+          | %{status: :failure, config: config, reason: reason :: term}
+          | %{status: :not_done, config: config}
 
   @typedoc "A list of pairs {module, result} representing a step."
   @type steps :: [{step_mod, step_result}]
 
   @type t :: %__MODULE__{
-              steps:   [{step_mod, step_result}],
-              exports: exports}
+          steps: [{step_mod, step_result}],
+          exports: exports
+        }
 
-  defstruct steps:   [],
+  defstruct steps: [],
             exports: %{}
 
   @doc "Creates a new empty result."
@@ -82,6 +84,7 @@ defmodule Hare.Context.Result do
   defp add(step, %{steps: steps} = result) do
     %{result | steps: [step | steps]}
   end
+
   defp add(step, %{steps: steps} = result, new_exports) do
     %{result | steps: [step | steps], exports: new_exports}
   end

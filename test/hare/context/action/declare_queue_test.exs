@@ -6,8 +6,7 @@ defmodule Hare.Context.Action.DeclareQueueTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   test "validate/1" do
-    config = [name: "foo",
-              opts: [durable: true]]
+    config = [name: "foo", opts: [durable: true]]
 
     assert :ok == DeclareQueue.validate(config)
   end
@@ -17,11 +16,11 @@ defmodule Hare.Context.Action.DeclareQueueTest do
     assert error == DeclareQueue.validate([])
 
     error = {:error, {:not_binary, :name, :foo}}
-    assert error == DeclareQueue.validate([name: :foo])
+    assert error == DeclareQueue.validate(name: :foo)
   end
 
   test "run/2" do
-    {:ok, history} = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     config = [history: history]
 
     {:ok, given_conn} = Adapter.open_connection(config)

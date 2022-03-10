@@ -6,19 +6,18 @@ defmodule Hare.Context.Action.DeclareServerNamedQueueTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   test "validate/1" do
-    config = [export_as: :foo,
-              opts:      [durable: true]]
+    config = [export_as: :foo, opts: [durable: true]]
 
     assert :ok == DeclareServerNamedQueue.validate(config)
   end
 
   test "validate/1 on error" do
     error = {:error, {:not_atom, :export_as, "foo"}}
-    assert error == DeclareServerNamedQueue.validate([export_as: "foo"])
+    assert error == DeclareServerNamedQueue.validate(export_as: "foo")
   end
 
   test "run/2" do
-    {:ok, history} = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     config = [history: history]
 
     {:ok, given_conn} = Adapter.open_connection(config)

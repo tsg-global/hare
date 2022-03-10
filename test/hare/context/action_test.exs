@@ -17,7 +17,7 @@ defmodule Hare.Context.ActionTest do
   @known %{foo: TestAction}
 
   test "validate/1" do
-    error  = {:error, :some_reason}
+    error = {:error, :some_reason}
     config = [validate: error]
 
     assert error == Action.validate(:foo, config, @known)

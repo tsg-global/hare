@@ -5,9 +5,9 @@ defmodule Hare.Publisher.Declaration do
   defstruct [:steps, :context]
 
   def parse(config, context) do
-    with true         <- Keyword.keyword?(config),
+    with true <- Keyword.keyword?(config),
          {:ok, steps} <- steps(config),
-         :ok          <- context.validate(steps) do
+         :ok <- context.validate(steps) do
       {:ok, %Declaration{steps: steps, context: context}}
     else
       false -> {:error, :not_keyword_list}
@@ -17,10 +17,10 @@ defmodule Hare.Publisher.Declaration do
 
   defp steps(config) do
     with exchange_config <- Keyword.get(config, :exchange, []),
-         true            <- Keyword.keyword?(exchange_config) do
+         true <- Keyword.keyword?(exchange_config) do
       {:ok, build_steps(exchange_config)}
     else
-      false  -> {:error, {:not_keyword_list, :exchange}}
+      false -> {:error, {:not_keyword_list, :exchange}}
     end
   end
 

@@ -2,16 +2,18 @@ defmodule Hare.Context.Action.Helper.Validations do
   @moduledoc false
 
   defmacro validate(config, field, format, opts \\ []) do
-    guard          = :"is_#{format}"
-    error_reason   = :"not_#{format}"
+    guard = :"is_#{format}"
+    error_reason = :"not_#{format}"
     on_not_present = not_present_clause(config, field, opts)
 
     quote location: :keep do
       case Keyword.fetch(unquote(config), unquote(field)) do
         {:ok, value} when unquote(guard)(value) ->
           :ok
+
         {:ok, value} ->
           {:error, {unquote(error_reason), unquote(field), value}}
+
         :error ->
           unquote(on_not_present)
       end
@@ -28,6 +30,7 @@ defmodule Hare.Context.Action.Helper.Validations do
             true -> :ok
             false -> {:error, {:not_keyword_list, unquote(field), value}}
           end
+
         :error ->
           unquote(on_not_present)
       end
@@ -38,6 +41,7 @@ defmodule Hare.Context.Action.Helper.Validations do
     case Keyword.get(opts, :required, true) do
       true ->
         quote do: {:error, {:not_present, unquote(field), unquote(config)}}
+
       false ->
         quote do: :ok
     end

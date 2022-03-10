@@ -5,13 +5,12 @@ defmodule Hare.Consumer.Declaration do
 
   defstruct [:steps, :context]
 
-  @bind_exported_resources [exchange_from_export: :exchange,
-                            queue_from_export:    :queue]
+  @bind_exported_resources [exchange_from_export: :exchange, queue_from_export: :queue]
 
   def parse(config, context) do
-    with true         <- Keyword.keyword?(config),
+    with true <- Keyword.keyword?(config),
          {:ok, steps} <- steps(config),
-         :ok          <- context.validate(steps) do
+         :ok <- context.validate(steps) do
       {:ok, %Declaration{steps: steps, context: context}}
     else
       false -> {:error, :not_keyword_list}
@@ -21,7 +20,7 @@ defmodule Hare.Consumer.Declaration do
 
   defp steps(config) do
     with {:ok, exchange_config} <- extract(config, :exchange),
-         {:ok, queue_config}    <- extract(config, :queue) do
+         {:ok, queue_config} <- extract(config, :queue) do
       binds_opts = get_binds(config)
       qos_opts = Keyword.get(config, :qos)
 
@@ -31,26 +30,29 @@ defmodule Hare.Consumer.Declaration do
 
   defp extract(config, key) do
     with {:ok, extracted_config} <- Keyword.fetch(config, key),
-         true                    <- Keyword.keyword?(extracted_config) do
+         true <- Keyword.keyword?(extracted_config) do
       {:ok, extracted_config}
     else
       :error -> {:error, {:not_present, key}}
-      false  -> {:error, {:not_keyword_list, key}}
+      false -> {:error, {:not_keyword_list, key}}
     end
   end
 
   def get_binds(config) do
     with [] <- Keyword.get_values(config, :bind),
-      do: [[]]
+         do: [[]]
   end
 
   defp build_steps(exchange_config, queue_config, binds_opts, qos_opts) do
-    resources = [declare_exchange: [{:export_as, :exchange} | exchange_config],
-                 declare_queue:    [{:export_as, :queue}    | queue_config]]
+    resources = [
+      declare_exchange: [{:export_as, :exchange} | exchange_config],
+      declare_queue: [{:export_as, :queue} | queue_config]
+    ]
 
-    binds = Enum.map binds_opts, fn (bind_opts) ->
-      {:bind, [{:opts, bind_opts} | @bind_exported_resources]}
-    end
+    binds =
+      Enum.map(binds_opts, fn bind_opts ->
+        {:bind, [{:opts, bind_opts} | @bind_exported_resources]}
+      end)
 
     qos = if qos_opts, do: [qos: qos_opts], else: []
 

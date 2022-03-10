@@ -7,17 +7,18 @@ defmodule Hare.Core.Exchange do
   alias __MODULE__
   alias Hare.Core.Chan
 
-  @type chan :: Chan.t
-  @type name :: Hare.Adapter.exchange_name
+  @type chan :: Chan.t()
+  @type name :: Hare.Adapter.exchange_name()
 
   @type t :: %__MODULE__{
-              chan: chan,
-              name: name}
+          chan: chan,
+          name: name
+        }
 
-  @type type        :: Hare.Adapter.exchange_type
-  @type opts        :: Hare.Adapter.opts
-  @type payload     :: Hare.Adapter.payload
-  @type routing_key :: Hare.Adapter.routing_key
+  @type type :: Hare.Adapter.exchange_type()
+  @type opts :: Hare.Adapter.opts()
+  @type payload :: Hare.Adapter.payload()
+  @type routing_key :: Hare.Adapter.routing_key()
 
   defstruct [:chan, :name]
 
@@ -52,10 +53,11 @@ defmodule Hare.Core.Exchange do
     * `type` - The type of the exchange as an atom (:fanout, :direct, etc)
     * `opts` - The exchange options
   """
-  @spec declare(chan, name, type, opts) :: {:ok, t} |
-                                           {:error, reason :: term}
+  @spec declare(chan, name, type, opts) ::
+          {:ok, t}
+          | {:error, reason :: term}
   def declare(%Chan{} = chan, name, type \\ :direct, opts \\ [])
-  when is_binary(name) and is_atom(type) do
+      when is_binary(name) and is_atom(type) do
     %{given: given, adapter: adapter} = chan
 
     with :ok <- adapter.declare_exchange(given, name, type, opts) do
@@ -77,7 +79,7 @@ defmodule Hare.Core.Exchange do
   def publish(exchange, payload, routing_key \\ "", opts \\ [])
 
   def publish(%Exchange{chan: chan, name: name}, payload, routing_key, opts)
-  when is_binary(payload) and is_binary(routing_key) do
+      when is_binary(payload) and is_binary(routing_key) do
     %{given: given, adapter: adapter} = chan
 
     adapter.publish(given, name, payload, routing_key, opts)

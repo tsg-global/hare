@@ -21,7 +21,7 @@ defmodule Hare.Core.Conn do
 
   alias __MODULE__.State
 
-  @type config :: State.Bridge.config
+  @type config :: State.Bridge.config()
 
   @doc """
   Starts a `Hare.Core.Conn` process linked to the current process.
@@ -34,7 +34,7 @@ defmodule Hare.Core.Conn do
   This function is used to start a `Hare.Core.Conn` on a supervision tree, and
   behaves like a GenServer.
   """
-  @spec start_link(config, GenServer.options) :: GenServer.on_start
+  @spec start_link(config, GenServer.options()) :: GenServer.on_start()
   def start_link(config, opts \\ []),
     do: Connection.start_link(__MODULE__, config, opts)
 
@@ -49,8 +49,9 @@ defmodule Hare.Core.Conn do
 
   A timeout can be given to `GenServer.call/3`.
   """
-  @spec open_channel(conn :: GenServer.server, timeout) :: {:ok, Hare.Core.Chan.t} |
-                                                           {:error, reason :: term}
+  @spec open_channel(conn :: GenServer.server(), timeout) ::
+          {:ok, Hare.Core.Chan.t()}
+          | {:error, reason :: term}
   def open_channel(conn, timeout \\ 5000),
     do: Connection.call(conn, :open_channel, timeout)
 
@@ -59,7 +60,7 @@ defmodule Hare.Core.Conn do
 
   It is recommended to not use this function except for testing reasons.
   """
-  @spec given_conn(conn :: pid) :: Hare.Adapter.conn
+  @spec given_conn(conn :: pid) :: Hare.Adapter.conn()
   def given_conn(conn),
     do: Connection.call(conn, :given_conn)
 
@@ -81,7 +82,7 @@ defmodule Hare.Core.Conn do
   @doc false
   def connect(_info, state) do
     case State.connect(state) do
-      {:ok, new_state}              -> {:ok, new_state}
+      {:ok, new_state} -> {:ok, new_state}
       {:retry, interval, new_state} -> {:backoff, interval, new_state}
     end
   end
@@ -93,18 +94,21 @@ defmodule Hare.Core.Conn do
   @doc false
   def handle_call(:open_channel, from, state),
     do: {:noreply, State.open_channel(state, from)}
+
   def handle_call({:close, reason}, _from, state),
     do: {:disconnect, reason, :ok, state}
+
   def handle_call(:given_conn, _from, state),
     do: {:reply, State.given_conn(state), state}
 
   @doc false
   def handle_info({:DOWN, ref, _, _, _reason}, state) do
     case State.down?(state, ref) do
-      true  -> {:connect, :reconnect, state}
+      true -> {:connect, :reconnect, state}
       false -> {:noreply, state}
     end
   end
+
   def handle_info(_anything, state) do
     {:noreply, state}
   end

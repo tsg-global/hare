@@ -13,11 +13,11 @@ defmodule Hare.Context.Action.DefaultExchangeTest do
 
   test "validate/1 on error" do
     error = {:error, {:not_atom, :export_as, "foo"}}
-    assert error == DefaultExchange.validate([export_as: "foo"])
+    assert error == DefaultExchange.validate(export_as: "foo")
   end
 
   test "run/2" do
-    {:ok, history} = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     config = [history: history]
 
     {:ok, given_conn} = Adapter.open_connection(config)

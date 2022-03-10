@@ -6,14 +6,15 @@ defmodule Hare.Adapter.Sandbox.Chan do
   alias Hare.Adapter.Sandbox.Conn
 
   @type t :: %Chan{
-              pid: pid,
-              conn: Conn.t}
+          pid: pid,
+          conn: Conn.t()
+        }
 
   defstruct [:pid, :conn]
 
   def open(%Conn{} = conn) do
     case Conn.on_channel_open(conn) do
-      :ok   -> {:ok, new(conn)}
+      :ok -> {:ok, new(conn)}
       other -> other
     end
   end

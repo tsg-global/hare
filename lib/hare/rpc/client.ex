@@ -55,14 +55,14 @@ defmodule Hare.RPC.Client do
   Check it for more detailed information.
   """
 
-  @type request     :: term
-  @type payload     :: Hare.Adapter.payload
-  @type response    :: term
-  @type routing_key :: Hare.Adapter.routing_key
-  @type opts        :: Hare.Adapter.opts
-  @type from        :: GenServer.from
-  @type meta        :: map
-  @type state       :: term
+  @type request :: term
+  @type payload :: Hare.Adapter.payload()
+  @type response :: term
+  @type routing_key :: Hare.Adapter.routing_key()
+  @type opts :: Hare.Adapter.opts()
+  @type from :: GenServer.from()
+  @type meta :: map
+  @type state :: term
 
   @doc """
   Called when the RPC client process is first started. `start_link/5` will block
@@ -84,9 +84,9 @@ defmodule Hare.RPC.Client do
   or calling `terminate/2`.
   """
   @callback init(initial :: term) ::
-              {:ok, state} |
-              :ignore |
-              {:stop, reason :: term}
+              {:ok, state}
+              | :ignore
+              | {:stop, reason :: term}
 
   @doc """
   Called when the RPC client process has opened AMQP channel before registering
@@ -99,9 +99,9 @@ defmodule Hare.RPC.Client do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_connected(state) ::
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the AMQP server has registered the process as a consumer of the
@@ -115,8 +115,8 @@ defmodule Hare.RPC.Client do
   reason `reason`.
   """
   @callback handle_ready(meta, state) ::
-              {:noreply, state} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the AMQP server has been disconnected from the AMQP broker.
@@ -129,9 +129,9 @@ defmodule Hare.RPC.Client do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback handle_disconnected(reason :: term, state) ::
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called before a request will be performed to the exchange.
@@ -166,12 +166,12 @@ defmodule Hare.RPC.Client do
   reason `reason`.
   """
   @callback before_request(request, routing_key, opts :: term, from, state) ::
-              {:ok, state} |
-              {:ok, payload, routing_key, opts :: term, state} |
-              {:reply, response, state} |
-              {:reply, response, state, timeout | :hibernate} |
-              {:stop, reason :: term, response, state} |
-              {:stop, reason :: term, state}
+              {:ok, state}
+              | {:ok, payload, routing_key, opts :: term, state}
+              | {:reply, response, state}
+              | {:reply, response, state, timeout | :hibernate}
+              | {:stop, reason :: term, response, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when a response has been received, before it is delivered to the caller.
@@ -203,12 +203,12 @@ defmodule Hare.RPC.Client do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback on_response(response, from, state) ::
-              {:reply, response, state} |
-              {:reply, response, state, timeout | :hibernate} |
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, response, state} |
-              {:stop, reason :: term, state}
+              {:reply, response, state}
+              | {:reply, response, state, timeout | :hibernate}
+              | {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, response, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when a message has been returned. It may happen when a request is sent
@@ -232,12 +232,12 @@ defmodule Hare.RPC.Client do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback on_return(payload, state) ::
-              {:reply, response, state} |
-              {:reply, response, state, timeout | :hibernate} |
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, response, state} |
-              {:stop, reason :: term, state}
+              {:reply, response, state}
+              | {:reply, response, state, timeout | :hibernate}
+              | {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, response, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when a request has timed out.
@@ -260,12 +260,12 @@ defmodule Hare.RPC.Client do
   `terminate(reason, state)` before the process exits with reason `reason`.
   """
   @callback on_timeout(from, state) ::
-              {:reply, response, state} |
-              {:reply, response, state, timeout | :hibernate} |
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, response, state} |
-              {:stop, reason :: term, state}
+              {:reply, response, state}
+              | {:reply, response, state, timeout | :hibernate}
+              | {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, response, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the process receives a call message sent by `call/3`. This
@@ -274,13 +274,13 @@ defmodule Hare.RPC.Client do
 
   See `c:GenServer.handle_call/3`.
   """
-  @callback handle_call(request :: term, GenServer.from, state) ::
-              {:reply, reply :: term, state} |
-              {:reply, reply :: term, state, timeout | :hibernate} |
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state} |
-              {:stop, reason :: term, reply :: term, state}
+  @callback handle_call(request :: term, GenServer.from(), state) ::
+              {:reply, reply :: term, state}
+              | {:reply, reply :: term, state, timeout | :hibernate}
+              | {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
+              | {:stop, reason :: term, reply :: term, state}
 
   @doc """
   Called when the process receives a cast message sent by `cast/3`. This
@@ -290,9 +290,9 @@ defmodule Hare.RPC.Client do
   See `c:GenServer.handle_cast/2`.
   """
   @callback handle_cast(request :: term, state) ::
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
 
   @doc """
   Called when the process receives a message. This callback has the same
@@ -302,9 +302,9 @@ defmodule Hare.RPC.Client do
   See `c:GenServer.handle_info/2`.
   """
   @callback handle_info(meta, state) ::
-              {:noreply, state} |
-              {:noreply, state, timeout | :hibernate} |
-              {:stop, reason :: term, state}
+              {:noreply, state}
+              | {:noreply, state, timeout | :hibernate}
+              | {:stop, reason :: term, state}
 
   @doc """
   This callback is the same as the `GenServer` equivalent and is called when the
@@ -366,10 +366,18 @@ defmodule Hare.RPC.Client do
       def terminate(_reason, _state),
         do: :ok
 
-      defoverridable [init: 1, terminate: 2,
-                      handle_connected: 1, handle_ready: 2, handle_disconnected: 2,
-                      handle_call: 3, handle_cast: 2, handle_info: 2,
-                      before_request: 5, on_timeout: 2, on_return: 2, on_response: 3]
+      defoverridable init: 1,
+                     terminate: 2,
+                     handle_connected: 1,
+                     handle_ready: 2,
+                     handle_disconnected: 2,
+                     handle_call: 3,
+                     handle_cast: 2,
+                     handle_info: 2,
+                     before_request: 5,
+                     on_timeout: 2,
+                     on_return: 2,
+                     on_response: 3
     end
   end
 
@@ -380,9 +388,11 @@ defmodule Hare.RPC.Client do
 
   @context Hare.Context
 
-  @type config :: [exchange: Hare.Context.Action.DeclareExchange.config,
-                   context: module,
-                   timeout: timeout]
+  @type config :: [
+          exchange: Hare.Context.Action.DeclareExchange.config(),
+          context: module,
+          timeout: timeout
+        ]
 
   @doc """
   Starts a `Hare.RPC.Client` process linked to the current process.
@@ -399,7 +409,8 @@ defmodule Hare.RPC.Client do
     * `initial` - the value that will be given to `init/1`
     * `opts` - the GenServer options
   """
-  @spec start_link(module, GenServer.server, config, initial :: term, GenServer.options) :: GenServer.on_start
+  @spec start_link(module, GenServer.server(), config, initial :: term, GenServer.options()) ::
+          GenServer.on_start()
   def start_link(mod, conn, config, initial, opts \\ []) do
     {context, opts} = Keyword.pop(opts, :context, @context)
     args = {config, context, mod, initial}
@@ -413,22 +424,22 @@ defmodule Hare.RPC.Client do
   A timeout bound to the same rules as the `GenServer` timeout may be
   specified (5 seconds by default)
   """
-  @spec request(GenServer.server, request, routing_key, opts, timeout) ::
-          {:ok, response} |
-          {:error, reason :: term}
+  @spec request(GenServer.server(), request, routing_key, opts, timeout) ::
+          {:ok, response}
+          | {:error, reason :: term}
   def request(client, payload, routing_key \\ "", opts \\ [], timeout \\ 5000),
     do: Hare.Actor.call(client, {:"$hare_request", payload, routing_key, opts}, timeout)
 
-  defdelegate call(server, message),          to: Hare.Actor
+  defdelegate call(server, message), to: Hare.Actor
   defdelegate call(server, message, timeout), to: Hare.Actor
-  defdelegate cast(server, message),          to: Hare.Actor
-  defdelegate reply(from, message),           to: Hare.Actor
+  defdelegate cast(server, message), to: Hare.Actor
+  defdelegate reply(from, message), to: Hare.Actor
 
   @doc false
   def init({config, context, mod, initial}) do
-    with {:ok, declaration}  <- build_declaration(config, context),
+    with {:ok, declaration} <- build_declaration(config, context),
          {:ok, runtime_opts} <- parse_runtime(config),
-         {:ok, given}        <- mod_init(mod, initial) do
+         {:ok, given} <- mod_init(mod, initial) do
       {:ok, State.new(config, declaration, runtime_opts, mod, given)}
     end
   end
@@ -447,19 +458,19 @@ defmodule Hare.RPC.Client do
 
   defp mod_init(mod, initial) do
     case mod.init(initial) do
-      {:ok, given}    -> {:ok, given}
-      :ignore         -> :ignore
+      {:ok, given} -> {:ok, given}
+      :ignore -> :ignore
       {:stop, reason} -> {:stop, reason}
     end
   end
 
   @doc false
   def connected(chan, %{declaration: declaration, mod: mod, given: given} = state) do
-    with {:noreply, new_given}           <- mod.handle_connected(given),
-         new_state                       <- State.set(state, new_given),
+    with {:noreply, new_given} <- mod.handle_connected(given),
+         new_state <- State.set(state, new_given),
          {:ok, resp_queue, req_exchange} <- Declaration.run(declaration, chan),
-         {:ok, new_resp_queue}           <- Queue.consume(resp_queue, no_ack: true),
-         :ok                             <- Chan.register_return_handler(chan) do
+         {:ok, new_resp_queue} <- Queue.consume(resp_queue, no_ack: true),
+         :ok <- Chan.register_return_handler(chan) do
       {:ok, State.connected(new_state, chan, new_resp_queue, req_exchange)}
     else
       {:stop, reason, new_given} -> {:stop, reason, State.set(state, new_given)}
@@ -484,10 +495,19 @@ defmodule Hare.RPC.Client do
   end
 
   @doc false
-  def handle_call({:"$hare_request", _payload, _routing_key, _opts}, _from, %{connected: false} = state) do
+  def handle_call(
+        {:"$hare_request", _payload, _routing_key, _opts},
+        _from,
+        %{connected: false} = state
+      ) do
     {:reply, {:error, :not_connected}, state}
   end
-  def handle_call({:"$hare_request", payload, routing_key, opts}, from, %{mod: mod, given: given} = state) do
+
+  def handle_call(
+        {:"$hare_request", payload, routing_key, opts},
+        from,
+        %{mod: mod, given: given} = state
+      ) do
     correlation_id = generate_correlation_id()
     opts = Keyword.put(opts, :correlation_id, correlation_id)
 
@@ -512,6 +532,7 @@ defmodule Hare.RPC.Client do
         {:stop, reason, State.set(state, new_given)}
     end
   end
+
   def handle_call(message, from, %{mod: mod, given: given} = state) do
     case mod.handle_call(message, from, given) do
       {:reply, reply, new_given} ->
@@ -548,6 +569,7 @@ defmodule Hare.RPC.Client do
         {:noreply, state}
     end
   end
+
   def handle_info(message, %{resp_queue: queue} = state) do
     case Queue.handle(queue, message) do
       {:consume_ok, meta} ->
@@ -569,6 +591,7 @@ defmodule Hare.RPC.Client do
         handle_async(message, :handle_info, state)
     end
   end
+
   def handle_info(message, state),
     do: handle_async(message, :handle_info, state)
 
@@ -608,18 +631,24 @@ defmodule Hare.RPC.Client do
     end
   end
 
-  defp perform(correlation_id, payload, routing_key, opts, %{req_exchange: req_exchange, resp_queue: resp_queue}) do
-    new_opts = Keyword.merge(opts, reply_to:       resp_queue.name,
-                                   correlation_id: correlation_id)
+  defp perform(correlation_id, payload, routing_key, opts, %{
+         req_exchange: req_exchange,
+         resp_queue: resp_queue
+       }) do
+    new_opts =
+      Keyword.merge(opts,
+        reply_to: resp_queue.name,
+        correlation_id: correlation_id
+      )
 
     Exchange.publish(req_exchange, payload, routing_key, new_opts)
     correlation_id
   end
 
   defp generate_correlation_id do
-    :erlang.unique_integer
-    |> :erlang.integer_to_binary
-    |> Base.encode64
+    :erlang.unique_integer()
+    |> :erlang.integer_to_binary()
+    |> Base.encode64()
   end
 
   defp complete(meta, %{resp_queue: resp_queue, req_exchange: req_exchange}) do

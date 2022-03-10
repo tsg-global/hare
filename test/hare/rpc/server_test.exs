@@ -22,12 +22,13 @@ defmodule Hare.RPC.ServerTest do
 
     def handle_request("implicit " <> _ = payload, meta, pid) do
       send(pid, {:message, payload, meta})
-      response =  "received: #{payload}"
+      response = "received: #{payload}"
       {:reply, response, pid}
     end
+
     def handle_request("explicit " <> _ = payload, meta, pid) do
       send(pid, {:message, payload, meta})
-      response =  "received: #{payload}"
+      response = "received: #{payload}"
       Server.reply(meta, response)
       {:noreply, pid}
     end
@@ -44,10 +45,14 @@ defmodule Hare.RPC.ServerTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   def build_conn do
-    {:ok, history} = Adapter.Backdoor.start_history
-    {:ok, conn} = Conn.start_link(config:  [history: history],
-                                  adapter: Adapter,
-                                  backoff: [10])
+    {:ok, history} = Adapter.Backdoor.start_history()
+
+    {:ok, conn} =
+      Conn.start_link(
+        config: [history: history],
+        adapter: Adapter,
+        backoff: [10]
+      )
 
     {history, conn}
   end
@@ -55,11 +60,10 @@ defmodule Hare.RPC.ServerTest do
   test "echo server" do
     {history, conn} = build_conn()
 
-    config = [exchange: [name: "foo",
-                         type: :fanout,
-                         opts: [durable: true]],
-              queue: [name: "bar",
-                      opts: [no_ack: true]]]
+    config = [
+      exchange: [name: "foo", type: :fanout, opts: [durable: true]],
+      queue: [name: "bar", opts: [no_ack: true]]
+    ]
 
     {:ok, rpc_server} = EchoTestServer.start_link(conn, config, self())
     assert_receive :connected
@@ -73,7 +77,7 @@ defmodule Hare.RPC.ServerTest do
     assert_receive {:info, :some_message}
 
     payload = "implicit - a binary message"
-    meta    = %{reply_to: "response_queue", correlation_id: 10}
+    meta = %{reply_to: "response_queue", correlation_id: 10}
 
     send(rpc_server, {:deliver, payload, meta})
     expected_meta = Map.merge(meta, %{queue: queue, exchange: exchange})
@@ -81,29 +85,17 @@ defmodule Hare.RPC.ServerTest do
 
     Process.sleep(20)
 
-    reply   = "received: #{payload}"
+    reply = "received: #{payload}"
     headers = [correlation_id: 10]
-    assert [{:open_channel,
-              [_given_conn],
-              {:ok, given_chan_1}},
-            {:monitor_channel,
-              [given_chan_1],
-              _ref},
-            {:declare_exchange,
-              [given_chan_1, "foo", :fanout, [durable: true]],
-              :ok},
-            {:declare_queue,
-              [given_chan_1, "bar", [no_ack: true]],
-              {:ok, _info}},
-            {:bind,
-              [given_chan_1, "bar", "foo", []],
-              :ok},
-            {:consume,
-              [given_chan_1, "bar", ^rpc_server, [no_ack: true]],
-              {:ok, _consumer_tag}},
-            {:publish,
-              [given_chan_1, "", ^reply, "response_queue", ^headers],
-              :ok}
+
+    assert [
+             {:open_channel, [_given_conn], {:ok, given_chan_1}},
+             {:monitor_channel, [given_chan_1], _ref},
+             {:declare_exchange, [given_chan_1, "foo", :fanout, [durable: true]], :ok},
+             {:declare_queue, [given_chan_1, "bar", [no_ack: true]], {:ok, _info}},
+             {:bind, [given_chan_1, "bar", "foo", []], :ok},
+             {:consume, [given_chan_1, "bar", ^rpc_server, [no_ack: true]], {:ok, _consumer_tag}},
+             {:publish, [given_chan_1, "", ^reply, "response_queue", ^headers], :ok}
            ] = Adapter.Backdoor.last_events(history, 7)
 
     Adapter.Backdoor.unlink(given_chan_1)
@@ -111,35 +103,23 @@ defmodule Hare.RPC.ServerTest do
     Process.sleep(20)
 
     payload = "explicit - another message"
-    meta    = %{reply_to: "response_queue", correlation_id: 11}
+    meta = %{reply_to: "response_queue", correlation_id: 11}
 
     send(rpc_server, {:deliver, payload, meta})
     assert_receive {:message, payload, _meta}
     Process.sleep(10)
 
-    reply   = "received: #{payload}"
+    reply = "received: #{payload}"
     headers = [correlation_id: 11]
-    assert [{:open_channel,
-              [_given_conn],
-              {:ok, given_chan_2}},
-            {:monitor_channel,
-              [given_chan_2],
-              _ref},
-            {:declare_exchange,
-              [given_chan_2, "foo", :fanout, [durable: true]],
-              :ok},
-            {:declare_queue,
-              [given_chan_2, "bar", [no_ack: true]],
-              {:ok, _info}},
-            {:bind,
-              [given_chan_2, "bar", "foo", []],
-              :ok},
-            {:consume,
-              [given_chan_2, "bar", ^rpc_server, [no_ack: true]],
-              {:ok, _consumer_tag}},
-            {:publish,
-              [given_chan_2, "", ^reply, "response_queue", ^headers],
-              :ok}
+
+    assert [
+             {:open_channel, [_given_conn], {:ok, given_chan_2}},
+             {:monitor_channel, [given_chan_2], _ref},
+             {:declare_exchange, [given_chan_2, "foo", :fanout, [durable: true]], :ok},
+             {:declare_queue, [given_chan_2, "bar", [no_ack: true]], {:ok, _info}},
+             {:bind, [given_chan_2, "bar", "foo", []], :ok},
+             {:consume, [given_chan_2, "bar", ^rpc_server, [no_ack: true]], {:ok, _consumer_tag}},
+             {:publish, [given_chan_2, "", ^reply, "response_queue", ^headers], :ok}
            ] = Adapter.Backdoor.last_events(history, 7)
 
     assert given_chan_1 != given_chan_2

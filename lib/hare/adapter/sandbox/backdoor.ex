@@ -28,12 +28,12 @@ defmodule Hare.Adapter.Sandbox.Backdoor do
   Adapter.Backdoor.events(history) # => a list of events
   ```
   """
-  @spec start_history(GenServer.options) :: Agent.on_start
+  @spec start_history(GenServer.options()) :: Agent.on_start()
   def start_history(opts \\ []),
     do: Conn.History.start_link(opts)
 
   @typedoc "Possible result specifications for `on_connect/1` and `on_channel_open/1`"
-  @type result  :: :ok | {:error, reason :: term}
+  @type result :: :ok | {:error, reason :: term}
 
   @doc """
   Starts a new agent process that specifies the behaviour of the
@@ -65,7 +65,7 @@ defmodule Hare.Adapter.Sandbox.Backdoor do
   Adapter.open_connection(config) # => {:ok, conn_3}
   ```
   """
-  @spec on_connect([result], GenServer.options) :: Agent.on_start
+  @spec on_connect([result], GenServer.options()) :: Agent.on_start()
   def on_connect(results, opts \\ []),
     do: Conn.Stack.start_link(results, opts)
 
@@ -101,7 +101,7 @@ defmodule Hare.Adapter.Sandbox.Backdoor do
   Adapter.open_channel(conn) # => {:ok, chan_3}
   ```
   """
-  @spec on_channel_open([result], GenServer.options) :: Agent.on_start
+  @spec on_channel_open([result], GenServer.options()) :: Agent.on_start()
   def on_channel_open(results, opts \\ []),
     do: Conn.Stack.start_link(results, opts)
 
@@ -137,12 +137,12 @@ defmodule Hare.Adapter.Sandbox.Backdoor do
   Adapter.get(chan, "yet_another")   # => {:empty, %{}}
   ```
   """
-  @spec messages(messages :: [term], GenServer.options) :: Agent.on_start
+  @spec messages(messages :: [term], GenServer.options()) :: Agent.on_start()
   def messages(messages, opts \\ []),
     do: Conn.Stack.start_link(messages, opts)
 
   @typedoc "Event returned by history checking functions. Like `events/1`."
-  @type event  :: {function :: atom, args :: [term], result :: term}
+  @type event :: {function :: atom, args :: [term], result :: term}
 
   @doc """
   Returns all functions called on the adapter for the connection that
@@ -190,22 +190,23 @@ defmodule Hare.Adapter.Sandbox.Backdoor do
   Mainly used to avoid the test crashing because of a simulated crash of
   a connection or a channel.
   """
-  @spec unlink(Conn.t | Chan.t) :: true
+  @spec unlink(Conn.t() | Chan.t()) :: true
   def unlink(%Conn{} = conn),
     do: Conn.unlink(conn)
+
   def unlink(%Chan{} = chan),
     do: Chan.unlink(chan)
-
 
   @doc """
   Provokes a connection or a channel process to stop with the given reason,
   therefore triggering all monitors and links with that process.
   """
-  @spec crash(Conn.t | Chan.t, reason :: term) :: :ok
+  @spec crash(Conn.t() | Chan.t(), reason :: term) :: :ok
   def crash(resource, reason \\ :simulated_crash)
 
   def crash(%Conn{} = conn, reason),
     do: Conn.stop(conn, reason)
+
   def crash(%Chan{} = chan, reason),
     do: Chan.close(chan, reason)
 end

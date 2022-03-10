@@ -8,6 +8,7 @@ defmodule Hare.Adapter.Sandbox.Conn.History do
   def push(nil, {_function, _args, result}) do
     result
   end
+
   def push(history, {_function, _args, result} = event) do
     Agent.update(history, &[event | &1])
     result
@@ -16,13 +17,15 @@ defmodule Hare.Adapter.Sandbox.Conn.History do
   def events(nil) do
     :no_history_given
   end
+
   def events(history) do
-    Agent.get(history, &(&1)) |> Enum.reverse
+    Agent.get(history, & &1) |> Enum.reverse()
   end
 
   def last_event(nil) do
     :no_history_given
   end
+
   def last_event(history) do
     Agent.get(history, &hd/1)
   end
@@ -30,9 +33,10 @@ defmodule Hare.Adapter.Sandbox.Conn.History do
   def last_events(nil, _count) do
     :no_history_given
   end
+
   def last_events(history, count) do
     history
     |> Agent.get(&Enum.take(&1, count))
-    |> Enum.reverse
+    |> Enum.reverse()
   end
 end

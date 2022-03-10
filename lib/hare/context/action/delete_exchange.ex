@@ -29,9 +29,7 @@ defmodule Hare.Context.Action.DeleteExchange do
   """
 
   @typedoc "The action configuration"
-  @type config :: [name:      binary,
-                   opts:      Keyword.t,
-                   export_as: atom]
+  @type config :: [name: binary, opts: Keyword.t(), export_as: atom]
 
   @behaviour Hare.Context.Action
 
@@ -42,7 +40,7 @@ defmodule Hare.Context.Action.DeleteExchange do
   alias Hare.Core.Exchange
   alias Hare.Context.Action.Helper
   import Helper.Validations, only: [validate: 4, validate_keyword: 3]
-  import Helper.Exports,     only: [validate_name_or_export: 3, get_name_or_export: 4]
+  import Helper.Exports, only: [validate_name_or_export: 3, get_name_or_export: 4]
 
   def validate(config) do
     with :ok <- validate_name_or_export(config, :name, :exchange_from_export),
@@ -64,7 +62,7 @@ defmodule Hare.Context.Action.DeleteExchange do
 
   defp get_exchange(chan, config, exports) do
     case get_name_or_export(config, exports, :name, :exchange_from_export) do
-      {:name, name}       -> {:ok, Exchange.new(chan, name)}
+      {:name, name} -> {:ok, Exchange.new(chan, name)}
       {:export, exchange} -> {:ok, exchange}
     end
   end
@@ -73,6 +71,7 @@ defmodule Hare.Context.Action.DeleteExchange do
     case Keyword.fetch(config, :export_as) do
       {:ok, export_tag} ->
         {:ok, nil, Map.put(exports, export_tag, exchange)}
+
       :error ->
         {:ok, nil}
     end

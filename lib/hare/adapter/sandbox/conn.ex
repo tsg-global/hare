@@ -4,17 +4,19 @@ defmodule Hare.Adapter.Sandbox.Conn do
   alias __MODULE__
   alias __MODULE__.{Pid, History, Stack}
 
-  @type t :: %Conn{pid: pid,
-                   history: GenServer.server,
-                   on_channel_open: GenServer.server,
-                   messages: list}
+  @type t :: %Conn{
+          pid: pid,
+          history: GenServer.server(),
+          on_channel_open: GenServer.server(),
+          messages: list
+        }
 
   defstruct [:pid, :history, :on_channel_open, :messages]
 
   def open(config) do
     case Keyword.fetch(config, :on_connect) do
       {:ok, on_connect} -> handle_on_connect(on_connect, config)
-      :error            -> {:ok, new(config)}
+      :error -> {:ok, new(config)}
     end
   end
 
@@ -35,6 +37,7 @@ defmodule Hare.Adapter.Sandbox.Conn do
 
   def on_channel_open(%Conn{on_channel_open: nil}),
     do: :ok
+
   def on_channel_open(%Conn{on_channel_open: on_channel_open}),
     do: with(:empty <- Stack.pop(on_channel_open), do: :ok)
 
@@ -48,21 +51,18 @@ defmodule Hare.Adapter.Sandbox.Conn do
   end
 
   defp new(config) do
-    {:ok, pid}      = Pid.start_link
-    history         = get_or_create_history(config)
+    {:ok, pid} = Pid.start_link()
+    history = get_or_create_history(config)
     on_channel_open = Keyword.get(config, :on_channel_open, nil)
-    messages        = Keyword.get(config, :messages, [])
+    messages = Keyword.get(config, :messages, [])
 
-    %Conn{pid:             pid,
-          history:         history,
-          on_channel_open: on_channel_open,
-          messages:        messages}
+    %Conn{pid: pid, history: history, on_channel_open: on_channel_open, messages: messages}
   end
 
   defp get_or_create_history(config) do
     case Keyword.fetch(config, :history) do
       {:ok, history} -> history
-      :error         -> History.start_link |> elem(1)
+      :error -> History.start_link() |> elem(1)
     end
   end
 end

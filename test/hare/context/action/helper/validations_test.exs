@@ -19,8 +19,7 @@ defmodule Hare.Context.Action.Helper.ValidationsTest do
   end
 
   test "validate_keyword/2" do
-    config = [valid:   [foo: "bar"],
-              invalid: %{foo: "bar"}]
+    config = [valid: [foo: "bar"], invalid: %{foo: "bar"}]
 
     assert :ok == Validations.validate_keyword(config, :valid)
 

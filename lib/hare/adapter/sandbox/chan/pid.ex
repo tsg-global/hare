@@ -25,6 +25,7 @@ defmodule Hare.Adapter.Sandbox.Chan.Pid do
   def handle_info({:DOWN, ref, _, _, reason}, %{ref: ref} = state) do
     {:stop, reason, state}
   end
+
   def handle_info(_anything, state) do
     {:noreply, state}
   end

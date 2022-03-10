@@ -23,6 +23,7 @@ defmodule Hare.ActorTest do
     def handle_call(:do_reply_directly, _from, pid) do
       {:reply, :direct_reply, pid}
     end
+
     def handle_call(:do_reply_indirectly, from, pid) do
       Hare.Actor.reply(from, :indirect_reply)
       {:noreply, pid}
@@ -31,6 +32,7 @@ defmodule Hare.ActorTest do
     def handle_cast({:do_stop, reason}, pid) do
       {:stop, reason, pid}
     end
+
     def handle_cast(message, pid) do
       send(pid, {:cast, message})
       {:noreply, pid}
@@ -53,8 +55,7 @@ defmodule Hare.ActorTest do
 
     {:ok, history} = Adapter.Backdoor.start_history()
 
-    config = [adapter: Adapter,
-              config:  [history: history]]
+    config = [adapter: Adapter, config: [history: history]]
 
     {:ok, conn} = Hare.Conn.start_link(config)
 
@@ -65,7 +66,7 @@ defmodule Hare.ActorTest do
 
     # handle_call
     #
-    assert :direct_reply   == TestActor.call(actor, :do_reply_directly)
+    assert :direct_reply == TestActor.call(actor, :do_reply_directly)
     assert :indirect_reply == TestActor.call(actor, :do_reply_indirectly)
 
     # on chan crash
@@ -103,9 +104,12 @@ defmodule Hare.ActorTest do
 
     default_genserver_timeout = 5000
 
-    config = [adapter: Adapter,
-              config:  [history: history, on_connect: on_connect],
-              backoff: [default_genserver_timeout]] # simulate long reconnection
+    config = [
+      adapter: Adapter,
+      config: [history: history, on_connect: on_connect],
+      # simulate long reconnection
+      backoff: [default_genserver_timeout]
+    ]
 
     {:ok, conn} = Hare.Conn.start_link(config)
 

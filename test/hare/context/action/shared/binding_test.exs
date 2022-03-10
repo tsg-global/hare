@@ -6,15 +6,11 @@ defmodule Hare.Context.Action.Shared.BindingTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   test "validate/1" do
-    config = [queue:    "foo",
-              exchange: "bar",
-              opts:     [routing_key: "baz.*"]]
+    config = [queue: "foo", exchange: "bar", opts: [routing_key: "baz.*"]]
 
     assert :ok == Binding.validate(config)
 
-    config = [queue_from_export: :foo,
-              exchange:          "bar",
-              opts:              [routing_key: "baz.*"]]
+    config = [queue_from_export: :foo, exchange: "bar", opts: [routing_key: "baz.*"]]
 
     assert :ok == Binding.validate(config)
   end
@@ -24,20 +20,20 @@ defmodule Hare.Context.Action.Shared.BindingTest do
     assert error == Binding.validate([])
 
     error = {:error, {:not_binary, :queue, :foo}}
-    assert error == Binding.validate([queue: :foo])
+    assert error == Binding.validate(queue: :foo)
 
     error = {:error, {:not_atom, :queue_from_export, "foo"}}
-    assert error == Binding.validate([queue_from_export: "foo"])
+    assert error == Binding.validate(queue_from_export: "foo")
   end
 
   test "run/2" do
-    {:ok, history} = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     config = [history: history]
 
     {:ok, given_conn} = Adapter.open_connection(config)
     {:ok, given_chan} = Adapter.open_channel(given_conn)
 
-    chan        = Hare.Core.Chan.new(given_chan, Adapter)
+    chan = Hare.Core.Chan.new(given_chan, Adapter)
     binding_fun = &Queue.bind/3
 
     config = [queue: "foo", exchange: "bar", opts: [durable: true]]

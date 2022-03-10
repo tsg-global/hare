@@ -3,8 +3,8 @@ defmodule Hare.Adapter do
   Specification of the AMQP adapter
   """
 
-  @type t    :: module
-  @type opts :: Keyword.t
+  @type t :: module
+  @type opts :: Keyword.t()
 
   # Connection
   #
@@ -87,7 +87,7 @@ defmodule Hare.Adapter do
 
   # Publish
   #
-  @type payload     :: binary
+  @type payload :: binary
   @type routing_key :: binary
 
   @doc "Publishes a message to an exchange"
@@ -96,7 +96,7 @@ defmodule Hare.Adapter do
 
   # Consume
   #
-  @type meta         :: map
+  @type meta :: map
   @type consumer_tag :: binary
 
   @doc "Gets a message from a queue"
@@ -132,11 +132,11 @@ defmodule Hare.Adapter do
     * `:unknown` - any other message
   """
   @callback handle(message :: term) ::
-              {:consume_ok, meta} |
-              {:deliver, payload, meta} |
-              {:cancel_ok, meta} |
-              {:cancel, meta} |
-              :unknown
+              {:consume_ok, meta}
+              | {:deliver, payload, meta}
+              | {:cancel_ok, meta}
+              | {:cancel, meta}
+              | :unknown
 
   @doc "Cancels the consumer with the given consumer_tag"
   @callback cancel(chan, consumer_tag, opts) ::

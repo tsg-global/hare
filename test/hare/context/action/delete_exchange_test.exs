@@ -6,8 +6,7 @@ defmodule Hare.Context.Action.DeleteExchangeTest do
   alias Hare.Adapter.Sandbox, as: Adapter
 
   test "validate/1" do
-    config = [name: "foo",
-              opts: [no_wait: true]]
+    config = [name: "foo", opts: [no_wait: true]]
 
     assert :ok == DeleteExchange.validate(config)
 
@@ -21,11 +20,11 @@ defmodule Hare.Context.Action.DeleteExchangeTest do
     assert error == DeleteExchange.validate([])
 
     error = {:error, {:not_binary, :name, :foo}}
-    assert error == DeleteExchange.validate([name: :foo])
+    assert error == DeleteExchange.validate(name: :foo)
   end
 
   test "run/2" do
-    {:ok, history} = Adapter.Backdoor.start_history
+    {:ok, history} = Adapter.Backdoor.start_history()
     config = [history: history]
 
     {:ok, given_conn} = Adapter.open_connection(config)

@@ -28,10 +28,7 @@ defmodule Hare.Context.Action.DefaultExchange do
   """
 
   @typedoc "The action configuration"
-  @type config :: [name:      binary,
-                   type:      atom,
-                   opts:      Keyword.t,
-                   export_as: atom]
+  @type config :: [name: binary, type: atom, opts: Keyword.t(), export_as: atom]
   @behaviour Hare.Context.Action
 
   alias Hare.Core.Exchange
@@ -45,7 +42,7 @@ defmodule Hare.Context.Action.DefaultExchange do
 
   def run(chan, config, exports) do
     chan
-    |> Exchange.default
+    |> Exchange.default()
     |> handle_exports(exports, config)
   end
 
@@ -53,6 +50,7 @@ defmodule Hare.Context.Action.DefaultExchange do
     case Keyword.fetch(config, :export_as) do
       {:ok, export_tag} ->
         {:ok, nil, Map.put(exports, export_tag, exchange)}
+
       :error ->
         {:ok, nil}
     end

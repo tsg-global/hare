@@ -9,6 +9,7 @@ defmodule Hare.Adapter.Sandbox.Conn.Stack do
 
   defp do_pop([]),
     do: {:empty, []}
+
   defp do_pop([result | rest]),
     do: {result, rest}
 end

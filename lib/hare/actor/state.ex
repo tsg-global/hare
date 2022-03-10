@@ -4,12 +4,10 @@ defmodule Hare.Actor.State do
   alias __MODULE__
   alias Hare.Core.Chan
 
-  defstruct [:conn, :status,
-             :chan, :ref, :wait_ref,
-             :mod, :given]
+  defstruct [:conn, :status, :chan, :ref, :wait_ref, :mod, :given]
 
   def new(conn, mod, given)
-  when is_atom(mod) do
+      when is_atom(mod) do
     %State{conn: conn, mod: mod, given: given, status: :not_connected}
   end
 
@@ -30,6 +28,7 @@ defmodule Hare.Actor.State do
 
   def handle_open_channel({:ok, chan}, %State{} = state),
     do: {:ok, connected(state, chan)}
+
   def handle_open_channel({:error, reason}, %State{} = state),
     do: {:error, reason, crash(state)}
 
@@ -40,6 +39,7 @@ defmodule Hare.Actor.State do
   def down(%State{chan: nil} = state) do
     state
   end
+
   def down(%State{chan: chan} = state) do
     Chan.close(chan)
     %{state | chan: nil, ref: nil, status: :not_connected}

@@ -27,8 +27,7 @@ defmodule Hare.Context.Action.DeclareServerNamedQueue do
   """
 
   @typedoc "The action configuration"
-  @type config :: [opts:      Keyword.t,
-                   export_as: atom]
+  @type config :: [opts: Keyword.t(), export_as: atom]
 
   @behaviour Hare.Context.Action
 
@@ -58,6 +57,7 @@ defmodule Hare.Context.Action.DeclareServerNamedQueue do
     case Keyword.fetch(config, :export_as) do
       {:ok, export_tag} ->
         {:ok, info, Map.put(exports, export_tag, queue)}
+
       :error ->
         {:ok, info}
     end

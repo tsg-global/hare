@@ -3,15 +3,10 @@ defmodule Hare.Consumer.State do
 
   alias __MODULE__
 
-  defstruct [:config,
-             :declaration, :queue, :exchange,
-             :mod, :given]
+  defstruct [:config, :declaration, :queue, :exchange, :mod, :given]
 
   def new(config, declaration, mod, given) do
-    %State{config:      config,
-           declaration: declaration,
-           mod:         mod,
-           given:       given}
+    %State{config: config, declaration: declaration, mod: mod, given: given}
   end
 
   def connected(%State{} = state, queue, exchange),

@@ -31,10 +31,7 @@ defmodule Hare.Context.Action.DeclareExchange do
   """
 
   @typedoc "The action configuration"
-  @type config :: [name:      binary,
-                   type:      atom,
-                   opts:      Keyword.t,
-                   export_as: atom]
+  @type config :: [name: binary, type: atom, opts: Keyword.t(), export_as: atom]
 
   @behaviour Hare.Context.Action
 
@@ -71,6 +68,7 @@ defmodule Hare.Context.Action.DeclareExchange do
     case Keyword.fetch(config, :export_as) do
       {:ok, export_tag} ->
         {:ok, nil, Map.put(exports, export_tag, exchange)}
+
       :error ->
         {:ok, nil}
     end

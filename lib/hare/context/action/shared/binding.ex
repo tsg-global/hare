@@ -6,7 +6,7 @@ defmodule Hare.Context.Action.Shared.Binding do
   alias Hare.Core.{Queue, Exchange}
   alias Hare.Context.Action.Helper
   import Helper.Validations, only: [validate_keyword: 3]
-  import Helper.Exports,     only: [validate_name_or_export: 3, get_name_or_export: 4]
+  import Helper.Exports, only: [validate_name_or_export: 3, get_name_or_export: 4]
 
   def validate(config) do
     with :ok <- validate_name_or_export(config, :queue, :queue_from_export),
@@ -17,7 +17,7 @@ defmodule Hare.Context.Action.Shared.Binding do
   end
 
   def run(binding_fun, chan, config, exports) do
-    with {:ok, queue}    <- get_queue(chan, config, exports),
+    with {:ok, queue} <- get_queue(chan, config, exports),
          {:ok, exchange} <- get_exchange(chan, config, exports) do
       opts = Keyword.get(config, :opts, @default_opts)
 
@@ -29,14 +29,14 @@ defmodule Hare.Context.Action.Shared.Binding do
 
   defp get_queue(chan, config, exports) do
     case get_name_or_export(config, exports, :queue, :queue_from_export) do
-      {:name, name}    -> {:ok, Queue.new(chan, name)}
+      {:name, name} -> {:ok, Queue.new(chan, name)}
       {:export, queue} -> {:ok, queue}
     end
   end
 
   defp get_exchange(chan, config, exports) do
     case get_name_or_export(config, exports, :exchange, :exchange_from_export) do
-      {:name, name}       -> {:ok, Exchange.new(chan, name)}
+      {:name, name} -> {:ok, Exchange.new(chan, name)}
       {:export, exchange} -> {:ok, exchange}
     end
   end
@@ -45,6 +45,7 @@ defmodule Hare.Context.Action.Shared.Binding do
     case Keyword.fetch(config, :export_as) do
       {:ok, export_tag} ->
         {:ok, nil, Map.put(exports, export_tag, {queue, exchange})}
+
       :error ->
         {:ok, nil}
     end

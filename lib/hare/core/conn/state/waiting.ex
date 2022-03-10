@@ -9,11 +9,12 @@ defmodule Hare.Core.Conn.State.Waiting do
 
   alias __MODULE__
 
-  @type client  :: GenServer.from
+  @type client :: GenServer.from()
   @type clients :: [client]
 
   @type t :: %__MODULE__{
-              clients: clients}
+          clients: clients
+        }
 
   defstruct [:clients]
 

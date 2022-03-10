@@ -7,28 +7,29 @@ defmodule Hare.Core.Queue do
   alias __MODULE__
   alias Hare.Core.{Chan, Exchange}
 
-  @type chan          :: Chan.t
-  @type name          :: Hare.Adapter.queue_name
-  @type consuming     :: boolean
+  @type chan :: Chan.t()
+  @type name :: Hare.Adapter.queue_name()
+  @type consuming :: boolean
   @type consuming_pid :: pid
-  @type consumer_tag  :: Hare.Adapter.consumer_tag
+  @type consumer_tag :: Hare.Adapter.consumer_tag()
 
   @type t :: %__MODULE__{
-              chan:          chan,
-              name:          name,
-              consuming:     consuming,
-              consuming_pid: consuming_pid | nil,
-              consumer_tag:  consumer_tag | nil}
+          chan: chan,
+          name: name,
+          consuming: consuming,
+          consuming_pid: consuming_pid | nil,
+          consumer_tag: consumer_tag | nil
+        }
 
-  defstruct chan:          nil,
-            name:          nil,
-            consuming:     false,
+  defstruct chan: nil,
+            name: nil,
+            consuming: false,
             consuming_pid: nil,
-            consumer_tag:  nil
+            consumer_tag: nil
 
-  @type payload :: Hare.Adapter.payload
-  @type meta    :: Hare.Adapter.meta
-  @type opts    :: Hare.Adapter.opts
+  @type payload :: Hare.Adapter.payload()
+  @type meta :: Hare.Adapter.meta()
+  @type opts :: Hare.Adapter.opts()
 
   @doc """
   Builds a queue with the given name associated to the given channel.
@@ -47,8 +48,9 @@ defmodule Hare.Core.Queue do
   Declares a server-named queue on the AMQP server through the given channel, and
   builds a queue struct associated to that channel.
   """
-  @spec declare(chan) :: {:ok, info :: term, t} |
-                         {:error, reason :: term}
+  @spec declare(chan) ::
+          {:ok, info :: term, t}
+          | {:error, reason :: term}
   def declare(chan),
     do: declare(chan, [])
 
@@ -72,10 +74,12 @@ defmodule Hare.Core.Queue do
   # => %Queue{name: "nas=eq3as.ndf?ea", chan: chan}
   ```
   """
-  @spec declare(chan, name | opts) :: {:ok, info :: term, t} |
-                                      {:error, reason :: term}
+  @spec declare(chan, name | opts) ::
+          {:ok, info :: term, t}
+          | {:error, reason :: term}
   def declare(chan, name) when is_binary(name),
     do: declare(chan, name, [])
+
   def declare(%Chan{} = chan, opts) do
     %{given: given, adapter: adapter} = chan
 
@@ -88,10 +92,11 @@ defmodule Hare.Core.Queue do
   Declares a queue with the given name and options through the given
   channel, and builds a queue struct associated to that channel.
   """
-  @spec declare(chan, name, opts) :: {:ok,  info :: term, t} |
-                                     {:error, reason :: term}
+  @spec declare(chan, name, opts) ::
+          {:ok, info :: term, t}
+          | {:error, reason :: term}
   def declare(%Chan{} = chan, name, opts)
-  when is_binary(name) do
+      when is_binary(name) do
     %{given: given, adapter: adapter} = chan
 
     with {:ok, info} <- adapter.declare_queue(given, name, opts) do
@@ -109,16 +114,21 @@ defmodule Hare.Core.Queue do
   the exchange with `Exchange.declare/4` and use the resulting exchange as
   `bind/3` second argument.
   """
-  @spec bind(t, Exchange.t | binary, opts) :: :ok
+  @spec bind(t, Exchange.t() | binary, opts) :: :ok
   def bind(queue, exchange_or_name, opts \\ [])
+
   def bind(%Queue{chan: chan} = queue, exchange_name, opts)
-  when is_binary(exchange_name) do
+      when is_binary(exchange_name) do
     exchange = Exchange.new(chan, exchange_name)
 
     bind(queue, exchange, opts)
   end
-  def bind(%Queue{chan: chan, name: name} = queue,
-           %Exchange{name: exchange_name} = exchange, opts) do
+
+  def bind(
+        %Queue{chan: chan, name: name} = queue,
+        %Exchange{name: exchange_name} = exchange,
+        opts
+      ) do
     %{given: given, adapter: adapter} = chan
 
     with :ok <- adapter.bind(given, name, exchange_name, opts) do
@@ -136,16 +146,21 @@ defmodule Hare.Core.Queue do
   the exchange with `Exchange.declare/4` and use the resulting exchange as
   `unbind/3` second argument.
   """
-  @spec unbind(t, Exchange.t | binary, opts) :: :ok
+  @spec unbind(t, Exchange.t() | binary, opts) :: :ok
   def unbind(queue, exchange_or_name, opts \\ [])
+
   def unbind(%Queue{chan: chan} = queue, exchange_name, opts)
-  when is_binary(exchange_name) do
+      when is_binary(exchange_name) do
     exchange = Exchange.new(chan, exchange_name)
 
     unbind(queue, exchange, opts)
   end
-  def unbind(%Queue{chan: chan, name: name} = queue,
-             %Exchange{name: exchange_name} = exchange, opts) do
+
+  def unbind(
+        %Queue{chan: chan, name: name} = queue,
+        %Exchange{name: exchange_name} = exchange,
+        opts
+      ) do
     %{given: given, adapter: adapter} = chan
 
     with :ok <- adapter.unbind(given, name, exchange_name, opts) do
@@ -156,8 +171,9 @@ defmodule Hare.Core.Queue do
   @doc """
   Gets a message from the queue through the associated channel.
   """
-  @spec get(t, opts) :: {:empty, info :: term} |
-                        {:ok, payload, meta}
+  @spec get(t, opts) ::
+          {:empty, info :: term}
+          | {:ok, payload, meta}
   def get(%Queue{chan: chan, name: name}, opts \\ []) do
     %{given: given, adapter: adapter} = chan
 
@@ -182,8 +198,9 @@ defmodule Hare.Core.Queue do
   @doc """
   Delegates to `consume/3` with caller's pid and empty options.
   """
-  @spec consume(t) :: {:ok, t} |
-                      {:error, :already_consuming}
+  @spec consume(t) ::
+          {:ok, t}
+          | {:error, :already_consuming}
   def consume(queue), do: consume(queue, self(), [])
 
   @doc """
@@ -193,10 +210,11 @@ defmodule Hare.Core.Queue do
   Otherwise the second argument is interpreted as options. It delegates to
   `consume/3` with the caller's pid and the given options.
   """
-  @spec consume(t, pid | opts) :: {:ok, t} |
-                                  {:error, :already_consuming}
+  @spec consume(t, pid | opts) ::
+          {:ok, t}
+          | {:error, :already_consuming}
   def consume(queue, pid) when is_pid(pid), do: consume(queue, pid, [])
-  def consume(queue, opts),                 do: consume(queue, self(), opts)
+  def consume(queue, opts), do: consume(queue, self(), opts)
 
   @doc """
   Consumes messages from the given queue through its associated channel.
@@ -212,17 +230,17 @@ defmodule Hare.Core.Queue do
   Each queue struct must be consumed by only one pid. For another pid to consume
   the same queue, another queue struct must be built.
   """
-  @spec consume(t, pid, opts) :: {:ok, t} |
-                                 {:error, :already_consuming}
+  @spec consume(t, pid, opts) ::
+          {:ok, t}
+          | {:error, :already_consuming}
   def consume(%Queue{consuming: true}, _pid, _opts) do
     {:error, :already_consuming}
   end
+
   def consume(%Queue{chan: chan, name: name} = queue, pid, opts)
-  when is_pid(pid) do
+      when is_pid(pid) do
     with {:ok, consumer_tag} <- do_consume(chan, name, pid, opts) do
-      new_queue = %{queue | consuming:     true,
-                            consuming_pid: pid,
-                            consumer_tag:  consumer_tag}
+      new_queue = %{queue | consuming: true, consuming_pid: pid, consumer_tag: consumer_tag}
 
       {:ok, new_queue}
     end
@@ -243,12 +261,13 @@ defmodule Hare.Core.Queue do
     * `{:cancel, meta}` - The process has been unexpectedly unregistered as a consumer by server
     * `:unknown` - The message is not a known AMQP message
   """
-  @spec handle(t, message :: term) :: {:consume_ok, meta} |
-                                      {:deliver, payload, meta} |
-                                      {:cancel_ok, meta} |
-                                      {:cancel, meta} |
-                                      {:return, payload, meta} |
-                                      :unknown
+  @spec handle(t, message :: term) ::
+          {:consume_ok, meta}
+          | {:deliver, payload, meta}
+          | {:cancel_ok, meta}
+          | {:cancel, meta}
+          | {:return, payload, meta}
+          | :unknown
   def handle(%Queue{chan: %{adapter: adapter}}, message),
     do: adapter.handle(message)
 
@@ -258,14 +277,14 @@ defmodule Hare.Core.Queue do
   """
   @spec cancel(t, opts) :: {:ok, t}
   def cancel(queue, opts \\ [])
+
   def cancel(%Queue{consuming: false} = queue, _opts) do
     {:ok, queue}
   end
+
   def cancel(%Queue{chan: chan, consumer_tag: tag} = queue, opts) do
     with :ok <- do_cancel(chan, tag, opts) do
-      new_queue = %{queue | consuming:     false,
-                            consuming_pid: nil,
-                            consumer_tag:  nil}
+      new_queue = %{queue | consuming: false, consuming_pid: nil, consumer_tag: nil}
 
       {:ok, new_queue}
     end
@@ -303,6 +322,7 @@ defmodule Hare.Core.Queue do
 
   defp do_consume(%{given: given, adapter: adapter}, name, pid, opts),
     do: adapter.consume(given, name, pid, opts)
+
   defp do_cancel(%{given: given, adapter: adapter}, tag, opts),
     do: adapter.cancel(given, tag, opts)
 end

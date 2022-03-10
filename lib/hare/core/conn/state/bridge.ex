@@ -31,36 +31,36 @@ defmodule Hare.Core.Conn.State.Bridge do
   When all but one backoff intervals have been returned, the last one is returned forever.
   """
 
-  @type adapter        :: Hare.Adapter.t
+  @type adapter :: Hare.Adapter.t()
   @type adapter_config :: term
-  @type interval       :: non_neg_integer
-  @type backoff        :: [interval]
-  @type given          :: Hare.Adapter.conn
-  @type status         :: :not_connected | :connected | :reconnecting
+  @type interval :: non_neg_integer
+  @type backoff :: [interval]
+  @type given :: Hare.Adapter.conn()
+  @type status :: :not_connected | :connected | :reconnecting
 
   @type t :: %__MODULE__{
-              adapter:        adapter,
-              config:         adapter_config,
-              backoff:        backoff,
-              next_intervals: backoff,
-              given:          given | nil,
-              ref:            reference | nil,
-              status:         status}
+          adapter: adapter,
+          config: adapter_config,
+          backoff: backoff,
+          next_intervals: backoff,
+          given: given | nil,
+          ref: reference | nil,
+          status: status
+        }
 
-  defstruct [:adapter, :config,
-             :backoff, :next_intervals,
-             :given, :ref, :status]
+  defstruct [:adapter, :config, :backoff, :next_intervals, :given, :ref, :status]
 
-  @type config_option :: {:adapter, adapter} |
-                         {:backoff, backoff} |
-                         {:config,  adapter_config}
+  @type config_option ::
+          {:adapter, adapter}
+          | {:backoff, backoff}
+          | {:config, adapter_config}
 
   @type config :: [config_option]
 
   alias __MODULE__
 
   @default_backoff [0, 10, 100, 1000, 5000]
-  @default_config  []
+  @default_config []
 
   @doc """
   Creates a new Bridge struct.
@@ -73,9 +73,9 @@ defmodule Hare.Core.Conn.State.Bridge do
   """
   @spec new(config) :: t
   def new(config) do
-    adapter      = Keyword.fetch!(config, :adapter)
-    backoff      = Keyword.get(config, :backoff, @default_backoff)
-    given_config = Keyword.get(config, :config,  @default_config)
+    adapter = Keyword.fetch!(config, :adapter)
+    backoff = Keyword.get(config, :backoff, @default_backoff)
+    given_config = Keyword.get(config, :config, @default_config)
 
     %Bridge{adapter: adapter, backoff: backoff, config: given_config}
     |> set_not_connected
@@ -88,8 +88,9 @@ defmodule Hare.Core.Conn.State.Bridge do
   On failure it returns `{:retry, interval, reason, bridge}` and expects
   the caller to wait that interval before calling `connect/1` again.
   """
-  @spec connect(t) :: {:ok, t} |
-                      {:retry, interval, reason :: term, t}
+  @spec connect(t) ::
+          {:ok, t}
+          | {:retry, interval, reason :: term, t}
   def connect(%Bridge{adapter: adapter, config: config} = bridge) do
     config
     |> adapter.open_connection
@@ -102,18 +103,20 @@ defmodule Hare.Core.Conn.State.Bridge do
   When the status is :connected, it returns the adapter's `open_channel/1`
   result, otherwise it returns `:not_connected`.
   """
-  @spec open_channel(t) :: {:ok, Hare.Adapter.chan} |
-                           {:error, reason :: term} |
-                           :not_connected
+  @spec open_channel(t) ::
+          {:ok, Hare.Adapter.chan()}
+          | {:error, reason :: term}
+          | :not_connected
   def open_channel(%Bridge{adapter: adapter, given: given, status: :connected}),
     do: adapter.open_channel(given)
+
   def open_channel(%Bridge{}),
     do: :not_connected
 
   @doc """
   Returns the current AMQP adapter connection term.
   """
-  @spec given_conn(t) :: Hare.Adapter.conn
+  @spec given_conn(t) :: Hare.Adapter.conn()
   def given_conn(%Bridge{given: given}) do
     given
   end
@@ -128,6 +131,7 @@ defmodule Hare.Core.Conn.State.Bridge do
     adapter.close_connection(given)
     set_not_connected(bridge)
   end
+
   def disconnect(%Bridge{} = bridge) do
     set_not_connected(bridge)
   end
@@ -136,23 +140,28 @@ defmodule Hare.Core.Conn.State.Bridge do
     ref = adapter.monitor_connection(given)
     {:ok, set_connected(bridge, given, ref)}
   end
+
   defp handle_connect({:error, reason}, %{status: :reconnecting} = bridge) do
     {interval, new_state} = pop_interval(bridge)
     {:retry, interval, reason, new_state}
   end
+
   defp handle_connect(error, bridge) do
     handle_connect(error, set_reconnecting(bridge))
   end
 
   defp pop_interval(%{next_intervals: [last]} = bridge),
     do: {last, bridge}
+
   defp pop_interval(%{next_intervals: [next | rest]} = bridge),
     do: {next, %{bridge | next_intervals: rest}}
 
   defp set_connected(bridge, given, ref),
     do: %{bridge | status: :connected, given: given, ref: ref}
+
   defp set_reconnecting(%{backoff: backoff} = bridge),
     do: %{bridge | status: :reconnecting, given: nil, ref: nil, next_intervals: backoff}
+
   defp set_not_connected(bridge),
     do: %{bridge | status: :not_connected, given: nil, ref: nil}
 end
