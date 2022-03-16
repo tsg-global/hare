@@ -24,7 +24,7 @@ defmodule Hare.Mixfile do
 
   defp deps do
     [
-      {:amqp, "~> 0.2", optional: true},
+      {:amqp, "~> 3.0", optional: true},
       {:connection, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
